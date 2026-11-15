@@ -622,8 +622,8 @@ summary:hover{color:var(--green-2)}
 (function(){
 "use strict";
 /* ===== Configuración =====
-   SMS_ENDPOINT: URL de su función (Twilio u otro) que recibe POST {to, body} y envía el SMS.
-   Si queda vacío, la app muestra el SMS en el celular de muestra y, en un celular, abre la app de mensajes. */
+   SMS_ENDPOINT: URL de su función que recibe POST {to, body, apikey?} y envía el aviso por WhatsApp (CallMeBot) o, de respaldo, por SMS (Twilio).
+   Si queda vacío, la app muestra el mensaje en el celular de muestra y, en un celular, abre WhatsApp o la app de mensajes. */
 const SMS_ENDPOINT=/netlify\.app$/.test(location.hostname)?'/.netlify/functions/sms':'';
 /* ANOM_CONFIG: pega aquí la línea que imprime el script de Earth Engine (gee_anomalia_chiara.js).
    rainPct: % de lluvia vs. lo normal (GPM IMERG). soilPct: % de humedad del suelo vs. lo normal (SMAP). */
@@ -800,9 +800,9 @@ function climFor(alt){
 /* ===== State & storage ===== */
 const KEY='muyuy.v6';
 const S={screen:'welcome',user:'',parcels:[],cur:null,tab:'hoy',contacts:[],done:{},skipPlan:false,
-  draft:[],selV:null,editing:null,quiz:null,phone:'',smsOn:true,smsSent:[],gpsAt:null};
-function save(){try{localStorage.setItem(KEY,JSON.stringify({user:S.user,parcels:S.parcels,phone:S.phone,smsOn:S.smsOn,contacts:S.contacts,done:S.done}));}catch(e){}}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.user=d.user||'';S.parcels=d.parcels||[];S.phone=d.phone||'';S.smsOn=d.smsOn!==false;S.contacts=d.contacts||[];S.done=d.done||{};}}catch(e){}}
+  draft:[],selV:null,editing:null,quiz:null,phone:'',cmbKey:'',smsOn:true,smsSent:[],gpsAt:null};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({user:S.user,parcels:S.parcels,phone:S.phone,cmbKey:S.cmbKey,smsOn:S.smsOn,contacts:S.contacts,done:S.done}));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.user=d.user||'';S.parcels=d.parcels||[];S.phone=d.phone||'';S.cmbKey=d.cmbKey||'';S.smsOn=d.smsOn!==false;S.contacts=d.contacts||[];S.done=d.done||{};}}catch(e){}}
 const curP=()=>S.parcels.find(p=>p.id===S.cur);
 const uid=()=>Math.random().toString(36).slice(2,9);
 
@@ -1130,7 +1130,7 @@ function alertCard(a,i,full){
     <p class="aw">${a.what}</p>${a.affects?`<p class="aff">${a.affects}</p>`:''}
     ${full?`<h4 class="adoh">Qué hacer</h4><ul class="todo">${a.actions.map((t,j)=>`<li><label><input type="checkbox" data-done="${i}-${j}" ${S.done[curP().id+'-'+a.k+'-'+j]?'checked':''}><span>${t}</span></label></li>`).join('')}</ul>
     <span class="tag sat">${ic('sat',13)} ${a.src}</span>
-    <div class="btn-row" style="margin-top:12px"><button class="btn btn-ghost" data-act="smsAlert" data-i="${i}">${ic('sms',18)} Enviarme SMS</button>${a.comm?`<button class="btn btn-ghost" data-act="commAlert" data-i="${i}">${ic('user',18)} Avisar a mi comunidad</button>`:'<span></span>'}</div>`
+    <div class="btn-row" style="margin-top:12px"><button class="btn btn-ghost" data-act="smsAlert" data-i="${i}">${ic('sms',18)} Enviarme WhatsApp</button>${a.comm?`<button class="btn btn-ghost" data-act="commAlert" data-i="${i}">${ic('user',18)} Avisar a mi comunidad</button>`:'<span></span>'}</div>`
     :`<ul class="todo short">${a.actions.slice(0,2).map(t=>`<li>${t}</li>`).join('')}</ul><button class="link-btn" data-act="tab" data-v="avisos">Ver todo lo que puedo hacer</button>`}
   </article>`;
 }
@@ -1180,7 +1180,7 @@ parcels(){
     <h2 class="sec">Alertas de esta semana</h2>
     ${all.length?all.map(({p,a})=>`<button class="alert ${a.k}" data-act="openAlert" data-id="${p.id}"><span class="ai">${ic(a.icon,22)}</span><div><span class="when">${a.when}, ${p.name}</span><b>${a.title}</b><span class="tx">${a.affects}</span></div></button>`).join(''):'<p class="lead">Sin alertas esta semana.</p>'}
     <div class="card" style="display:flex;gap:12px;align-items:center"><span class="oi" style="width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:#fff;box-shadow:inset 0 0 0 1px #E6EBE8">${ic('sms',26)}</span>
-      <div style="flex:1;font-size:15px;line-height:1.4"><b>${S.smsOn&&S.phone?'Alertas por SMS activas':'Recibe las alertas por SMS'}</b><br><span style="color:var(--muted)">${S.smsOn&&S.phone?`A tu número y ${S.contacts.length} ${S.contacts.length===1?'contacto':'contactos'}`:'Funciona en cualquier celular, sin internet'}</span></div>
+      <div style="flex:1;font-size:15px;line-height:1.4"><b>${S.smsOn&&S.phone?'Alertas por WhatsApp activas':'Recibir alertas por WhatsApp'}</b><br><span style="color:var(--muted)">${S.smsOn&&S.phone?`A tu número y ${S.contacts.length} ${S.contacts.length===1?'contacto':'contactos'}`:'Te avisamos antes de la helada, sin abrir la app'}</span></div>
       <button class="btn btn-ghost" data-act="openSms" style="min-height:44px;padding:0 14px">${S.phone?'Ver':'Activar'}</button></div>`,
     cta:''};
 },
@@ -1235,7 +1235,7 @@ parcel(){
   if(S.tab==='hoy'){
     const top=A.find(a=>a.k!=='task');
     return {html:head+`
-      ${top?alertCard(top,A.indexOf(top),false):`<div class="card" style="display:flex;gap:12px;align-items:center">${ic('sun',30)}<div><b>Sin alertas esta semana</b><br><span style="color:var(--muted)">Te avisaremos por SMS si algo cambia.</span></div></div>`}
+      ${top?alertCard(top,A.indexOf(top),false):`<div class="card" style="display:flex;gap:12px;align-items:center">${ic('sun',30)}<div><b>Sin alertas esta semana</b><br><span style="color:var(--muted)">Te avisaremos por WhatsApp si algo cambia.</span></div></div>`}
       <div class="card"><h3>Tu cultivo hoy</h3>
         ${st?`<div class="ncrop" style="margin-bottom:14px">${art(st.key,56)}<div class="nm" style="font-size:18px">${st.key}<small>${st.name}${st.sensitive?', etapa sensible a la helada':''}</small></div></div>${stageBar(st)}
           ${ASOC[st.key]?`<details><summary>Cómo sembrar ${st.key.toLowerCase()} juntos</summary><div class="body">${ASOC[st.key]} <i>Referencia general, valida con INIA.</i></div></details>`:''}`
@@ -1306,17 +1306,20 @@ parcel(){
 };
 function smsBlock(text){
   const inbox=S.smsSent.slice(-3);
-  return `<h2 class="sec" id="smsSec">Alertas por SMS</h2>
+  return `<h2 class="sec" id="smsSec">Alertas por WhatsApp</h2>
     <div class="phone" id="phone"><div class="scr"><div class="bar"><span>${String(NOW.getHours()).padStart(2,'0')}:${String(NOW.getMinutes()).padStart(2,'0')}</span><span>●●● ▮</span></div><div class="who"><span>${icm('sprout',18)}</span>MUYUY</div>
       ${inbox.length?inbox.map((m,i)=>`<div class="sms ${i===inbox.length-1&&S.justSent?'new':''}">${m.t}<small>${m.to}</small></div>`).join(''):`<div class="sms" style="opacity:.6">${text}<small>Vista previa</small></div>`}</div></div>
-    <div class="card"><div class="toggle-row">Recibir alertas por SMS<label class="switch"><input type="checkbox" data-sw="sms" ${S.smsOn?'checked':''}><span></span></label></div>
+    <div class="card"><div class="toggle-row">Recibir alertas por WhatsApp<label class="switch"><input type="checkbox" data-sw="sms" ${S.smsOn?'checked':''}><span></span></label></div>
       <label class="ql" for="phoneIn" style="font-size:15px;margin:6px 0 8px">Mi número</label>
       <div class="phone-in"><input class="input" value="+51" disabled aria-label="Código de país"><input id="phoneIn" class="input" inputmode="tel" placeholder="987 654 321" value="${S.phone}" maxlength="11"></div>
-      <p class="small">Funciona en cualquier celular, sin internet. Los mensajes van sin tildes para que lleguen bien.</p></div>
+      <label class="ql" for="keyIn" style="font-size:15px;margin:12px 0 4px">API key de CallMeBot <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+      <input id="keyIn" class="input" inputmode="numeric" autocomplete="off" placeholder="Ej. 123456" value="${S.cmbKey}" maxlength="20">
+      <p class="small">Si tu número ya está registrado en el sistema, no necesitas la key. Si no, actívalo una vez en <b>callmebot.com</b> (WhatsApp gratis) y pega aquí la key que te llega. Si no hay key, el aviso llega por SMS. Los mensajes van sin tildes para que lleguen bien.</p></div>
     <div class="card"><h3>Contactos que también reciben alertas</h3><p class="sub">Tu familia, un vecino o el presidente de tu comunidad</p>
       ${S.contacts.length?`<ul class="contacts">${S.contacts.map((c,i)=>`<li><span class="cav">${c.name[0].toUpperCase()}</span><div><b>${c.name}</b><span>+51 ${c.phone}, ${c.role}</span></div><button class="iconx" data-act="delContact" data-i="${i}" aria-label="Quitar a ${c.name}">${icm('trash',17)}</button></li>`).join('')}</ul>`:'<p class="small" style="margin:0 0 10px">Todavía no agregas contactos.</p>'}
       <div class="addc"><input id="cName" class="input" placeholder="Nombre" maxlength="20" aria-label="Nombre del contacto"><input id="cPhone" class="input" inputmode="tel" placeholder="Celular" maxlength="11" aria-label="Celular del contacto">
-        <select id="cRole" class="input" aria-label="Relación"><option>Familia</option><option>Vecino</option><option>Comunidad</option></select></div>
+        <select id="cRole" class="input" aria-label="Relación"><option>Familia</option><option>Vecino</option><option>Comunidad</option></select>
+        <input id="cKey" class="input" inputmode="numeric" autocomplete="off" style="grid-column:1/3" placeholder="API key de CallMeBot (opcional)" maxlength="20" aria-label="API key de CallMeBot del contacto"></div>
       <button class="btn btn-ghost" style="width:100%;margin-top:8px" data-act="addContact">${icm('plus',18)} Agregar contacto</button></div>`;
 }
 function flowBack(){return `<button class="back" data-act="cancelFlow">${icm('back',16)} Cancelar</button>`;}
@@ -1329,7 +1332,7 @@ function render(){
   const inFlow=['locate','draw','analyzing','quiz'].includes(S.screen)&&!S.editing&&!(S.quiz&&S.parcels.some(p=>p.id===S.quiz.id));
   const step=S.screen==='quiz'||S.screen==='analyzing'?2:1;
   $('#hdrMid').innerHTML=inFlow?`<div class="flowsteps">${['Ubicar','Preguntas'].map((l,i)=>`${i?'<span class="sep"></span>':''}<span class="s ${i+1===step?'on':i+1<step?'done':''}"><span class="n">${i+1<step?icm('check',12,3):i+1}</span><span class="lbl">${l}</span></span>`).join('')}</div>`:'';
-  $('#hdrRight').innerHTML=S.screen==='welcome'?'':`<div class="user-chip">${S.smsOn&&S.phone?`<span class="sms-dot">${ic('sms',14)} SMS</span>`:''}<span class="av">${(S.user||'?')[0].toUpperCase()}</span><span class="nm">${S.user||'Invitado'}</span></div>`;
+  $('#hdrRight').innerHTML=S.screen==='welcome'?'':`<div class="user-chip">${S.smsOn&&S.phone?`<span class="sms-dot">${ic('sms',14)} WhatsApp</span>`:''}<span class="av">${(S.user||'?')[0].toUpperCase()}</span><span class="nm">${S.user||'Invitado'}</span></div>`;
   S.parcels.forEach(loadForecast);
   updateOverlays();
   if(S.screen==='parcels')bindCarousel();
@@ -1435,7 +1438,7 @@ $('#app').addEventListener('click',async e=>{
     case 'addContact':{const n=$('#cName').value.trim(),ph=$('#cPhone').value.replace(/\D/g,''),r=$('#cRole').value;
       if(!n){toast('Escribe el nombre del contacto.');$('#cName').focus();break;}
       if(ph.length!==9){toast('El celular debe tener 9 dígitos.');$('#cPhone').focus();break;}
-      S.contacts.push({name:n,phone:ph,role:r});save();toast(`${n} recibirá las alertas`);keepScroll(render);break;}
+      S.contacts.push({name:n,phone:ph,role:r,key:($('#cKey').value||'').replace(/[^\w-]/g,'')});save();toast(`${n} recibirá las alertas`);keepScroll(render);break;}
     case 'delContact':{const c=S.contacts.splice(+b.dataset.i,1)[0];save();toast(`${c.name} ya no recibirá alertas`);keepScroll(render);break;}
     case 'share':{const p=curP(),np=nextPlan(p),st=stageOf(p);
       const t=`Plan Muyuy, ${p.name} (${fmtHa(p.stats.area)}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}). Ahora: ${st?st.key+' ('+st.name.toLowerCase()+')':'descanso'}. Próxima siembra: ${np.next?np.next.c+' desde '+fmtMY(np.next.sow):'por definir'}.`;
@@ -1445,9 +1448,10 @@ $('#app').addEventListener('click',async e=>{
 $('#app').addEventListener('input',e=>{const t=e.target;
   if(t.id==='pname'&&S.quiz)S.quiz.name=t.value.trim()||S.quiz.name;
   if(t.id==='phoneIn'){S.phone=t.value.replace(/[^\d ]/g,'');save();}
+  if(t.id==='keyIn'){S.cmbKey=t.value.replace(/[^\w-]/g,'');save();}
 });
 $('#app').addEventListener('change',e=>{const t=e.target;
-  if(t.dataset.sw==='sms'){S.smsOn=t.checked;save();toast(t.checked?'Alertas por SMS activadas':'Alertas por SMS apagadas');}
+  if(t.dataset.sw==='sms'){S.smsOn=t.checked;save();toast(t.checked?'Alertas por WhatsApp activadas':'Alertas por WhatsApp apagadas');}
   if(t.dataset.done){const [i,j]=t.dataset.done.split('-').map(Number),al=alertsFor(curP())[i];S.done[curP().id+'-'+al.k+'-'+j]=t.checked;save();if(t.checked)toast('¡Bien! Marcado como hecho');}
 });
 function keepScroll(fn){const p=$('#panel'),s=p.scrollTop;fn();p.scrollTop=s;}
@@ -1456,18 +1460,24 @@ function keepScroll(fn){const p=$('#panel'),s=p.scrollTop;fn();p.scrollTop=s;}
 async function sendSms(text,who){
   const me=S.phone.replace(/\D/g,'');
   let targets=[];
-  if(who==='me'){if(me.length<9){toast('Escribe tu número de celular (9 dígitos) abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}targets=[{name:'Tú',phone:me}];}
-  else{targets=S.contacts.slice();if(me.length===9)targets.unshift({name:'Tú',phone:me});if(!S.contacts.length){toast('Agrega contactos de tu comunidad abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}}
+  if(who==='me'){if(me.length<9){toast('Escribe tu número de celular (9 dígitos) abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}targets=[{name:'Tú',phone:me,key:S.cmbKey}];}
+  else{targets=S.contacts.slice();if(me.length===9)targets.unshift({name:'Tú',phone:me,key:S.cmbKey});if(!S.contacts.length){toast('Agrega contactos de tu comunidad abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}}
   S.smsSent.push({t:text,to:who==='me'?'Enviado a ti':`Enviado a ${targets.length} personas`});S.justSent=true;keepScroll(render);
   const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});
   const ph=$('#phone');if(ph){ph.classList.remove('buzz');void ph.offsetWidth;ph.classList.add('buzz');}
   if(navigator.vibrate)navigator.vibrate([120,60,120]);
   const nums=targets.map(t=>'+51'+t.phone);
   if(SMS_ENDPOINT){
-    try{const rs=await Promise.all(nums.map(to=>fetch(SMS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,body:text})})));
-      toast(rs.every(r=>r.ok)?`SMS enviado a ${nums.length} ${nums.length===1?'número':'números'}`:'Algunos SMS no se enviaron. Revisa la configuración.');}catch(e){toast('No se pudo enviar el SMS. Revisa la conexión.');}
+    try{
+      const rs=await Promise.all(targets.map(t=>fetch(SMS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:'+51'+t.phone,body:text,apikey:t.key||''})}).then(async r=>({ok:r.ok,...(await r.json().catch(()=>({})))})).catch(()=>({ok:false,error:'Sin conexión'}))));
+      const okN=rs.filter(r=>r.ok),wa=okN.filter(r=>r.canal==='whatsapp').length,sm=okN.length-wa,bad=rs.length-okN.length;
+      const parts=[];if(wa)parts.push(`WhatsApp a ${wa}`);if(sm)parts.push(`SMS a ${sm}`);
+      if(!bad)toast('Enviado: '+parts.join(' y '));
+      else{const why=(rs.find(r=>!r.ok)||{}).error||'Revisa la configuración.';toast(`${okN.length?'Enviado: '+parts.join(' y ')+'. ':''}No llegó a ${bad}: ${why}`.slice(0,140));}
+    }catch(e){toast('No se pudo enviar. Revisa la conexión.');}
   } else if(/Android|iPhone|iPad/i.test(navigator.userAgent)){
-    location.href=`sms:${nums.join(',')}${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(text)}`;
+    if(nums.length===1)location.href=`https://wa.me/${nums[0].slice(1)}?text=${encodeURIComponent(text)}`;
+    else location.href=`sms:${nums.join(',')}${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(text)}`;
   } else toast(who==='me'?'Así llegará a tu celular.':`Así llegará a ${targets.length} personas de tu comunidad.`);
 }
 

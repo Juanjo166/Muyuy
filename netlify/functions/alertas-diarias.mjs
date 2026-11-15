@@ -1,7 +1,9 @@
-// Muyuy: revisa cada mañana el pronóstico de cada parcela suscrita y envía SMS si viene helada o lluvia fuerte.
+// Muyuy: revisa cada mañana el pronóstico de cada parcela suscrita y envía WhatsApp (CallMeBot; respaldo SMS) si viene helada o lluvia fuerte.
 // Corre sola todos los días a las 5:00 a. m. hora de Lima (10:00 UTC).
 // Para probarla en el demo: en Netlify > Functions > alertas-diarias > "Run now".
-// Parcelas y teléfonos: archivo suscriptores.json en la raíz del sitio.
+// Parcelas y teléfonos: archivo suscriptores.json (teléfonos como 519XXXXXXXX, sin keys).
+// Las API keys de CallMeBot van en la variable de entorno CALLMEBOT_KEYS de Netlify.
+import { enviar } from '../lib/enviar.mjs';
 
 const FROST_C = 0;   // avisar si la mínima es 0 °C o menos
 const RAIN_MM = 15;  // avisar si llueven 15 mm o más en un día
@@ -27,10 +29,8 @@ export default async () => {
 
     for (const body of msgs)
       for (const to of s.telefonos) {
-        const r = await fetch(`${site}/.netlify/functions/sms`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to, body }),
-        });
-        results.push({ parcela: s.parcela, to, ok: r.ok });
+        const r = await enviar({ to, body });
+        results.push({ parcela: s.parcela, to: String(to).slice(0, 5) + '****', ok: r.ok, canal: r.canal, error: r.error });
       }
     if (!msgs.length) results.push({ parcela: s.parcela, sinAlertas: true, minima: cold.tmin, lluviaMax: wet.rain });
   }
