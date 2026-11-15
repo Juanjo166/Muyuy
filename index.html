@@ -305,6 +305,14 @@ header.top{border-bottom-color:var(--line)}
 .listen{width:auto;height:36px;border-radius:18px;padding:0 12px;gap:6px;display:inline-flex;align-items:center;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line)}
 .listen::after{content:"Escuchar"}
 .listen.on::after{content:"Parar"}
+html[lang="en"] .listen::after{content:"Listen"}
+html[lang="en"] .listen.on::after{content:"Stop"}
+.lang-sw{display:flex;gap:2px;padding:3px;border-radius:999px;background:#E6EBE8;box-shadow:inset 0 1px 2px rgba(24,35,46,.06);flex:none;margin-left:8px}
+.lang-sw button{min-width:38px;height:32px;border:0;border-radius:999px;background:transparent;font:700 13px "Atkinson Hyperlegible",system-ui,sans-serif;color:var(--muted);cursor:pointer;padding:0 8px;letter-spacing:.02em;transition:background .2s,color .2s}
+.lang-sw button[aria-pressed="true"]{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(24,35,46,.14)}
+.lang-sw button:hover{color:var(--ink)}
+.lang-sw button.soon{opacity:.6}
+@media (max-width:899px){.lang-sw button{min-width:34px;height:30px;font-size:12px;padding:0 6px}}
 .ptabs{top:0!important;background:var(--cream);border-radius:0;padding:0;gap:0;border-bottom:1px solid var(--line);margin:8px -22px 16px;padding:0 10px}
 .ptabs button{border-radius:0;border-bottom:3px solid transparent;min-height:50px;font-size:15px}
 .ptabs button[aria-pressed="true"]{background:transparent;box-shadow:none;color:var(--ink);border-bottom-color:var(--green)}
@@ -685,6 +693,7 @@ summary:hover{color:var(--green-2)}
     <button class="brand" data-act="home" aria-label="Yachiraq, mis parcelas"><span class="brand-mark" id="brandMark"></span><span class="brand-name">Yachiraq</span></button>
     <div class="hdr-mid" id="hdrMid"></div>
     <div id="hdrRight"></div>
+    <div class="lang-sw" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-pressed="true" title="Español">ES</button><button data-lang="en" aria-pressed="false" title="English">EN</button><button data-lang="qu" class="soon" aria-pressed="false" title="Runasimi (pronto)">QU</button></div>
   </header>
   <div class="main">
     <section class="stage" id="stage" aria-label="Mapa 3D de Chiara">
@@ -707,6 +716,7 @@ summary:hover{color:var(--green-2)}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="cropShade" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1.2" stdDeviation="0.9" flood-color="#3A2A10" flood-opacity=".22"/></filter></defs></svg>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="i18n.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1429,8 +1439,7 @@ welcome(){return {html:`
   <p class="lead">Yachiraq compara rotaciones para cada parcela con datos de satélites de la NASA, y te avisa antes de una helada o lluvia fuerte. <b>Por ahora funciona solo para parcelas del distrito de Chiara.</b></p>
   <div class="how3"><div><span class="hi">${ic('pin',22)}</span>Marca tus parcelas</div><div><span class="hi">${ic('leaf',22)}</span>Compara 3 rotaciones</div><div><span class="hi">${ic('bell',22)}</span>Te avisamos de heladas</div></div>
   <button class="option" data-act="ciencia"><span class="oi">${ic('sat',22)}</span><div><b>Cómo funciona</b><span>Datos de la NASA y cómo decidimos</span></div></button>
-  <div class="card"><label for="uname" class="ql">¿Cómo te llamas?</label><span class="qh">Para saludarte. No necesitas cuenta.</span><input id="uname" class="input" placeholder="Ej. Rosa" value="${S.user}" maxlength="24" autocomplete="given-name"></div>
-  <div class="card"><span class="ql" style="margin-bottom:10px">Idioma</span>${seg('lang',[['es','Español'],['qu','Runasimi']],'es')}</div>`,
+  <div class="card"><label for="uname" class="ql">¿Cómo te llamas?</label><span class="qh">Para saludarte. No necesitas cuenta.</span><input id="uname" class="input" placeholder="Ej. Rosa" value="${S.user}" maxlength="24" autocomplete="given-name"></div>`,
   cta:primary('Empezar','start')};},
 
 parcels(){
@@ -1785,7 +1794,8 @@ $('#app').addEventListener('click',async e=>{
     case 'delContact':{const c=S.contacts.splice(+b.dataset.i,1)[0];save();toast(`${c.name} ya no recibirá alertas`);keepScroll(render);break;}
     case 'share':{const p=curP(),np=nextPlan(p),st=stageOf(p);
       const t=`Plan Yachiraq, ${p.name} (${fmtHa(p.stats.area)}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}). Ahora: ${st?st.key+' ('+st.name.toLowerCase()+')':'descanso'}. Próxima siembra: ${np.next?np.next.c+' desde '+fmtMY(np.next.sow):'por definir'}.${p.rot?(r=>r?` Rotación elegida: ${r.name} (${r.seq.join(', ')}).`:'')(rotStrategies(p).find(x=>x.k===p.rot)):''}`;
-      if(navigator.share)navigator.share({title:'Mi plan Yachiraq',text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Plan copiado. Pégalo en WhatsApp para tu técnico.'),()=>toast('Plan listo para enviar.'));else toast('Plan listo para enviar.');break;}
+      const tt=window.I18N?I18N.t(t):t,ti=window.I18N?I18N.t('Mi plan Yachiraq'):'Mi plan Yachiraq';
+      if(navigator.share)navigator.share({title:ti,text:tt}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(tt).then(()=>toast('Plan copiado. Pégalo en WhatsApp para tu técnico.'),()=>toast('Plan listo para enviar.'));else toast('Plan listo para enviar.');break;}
   }
 });
 $('#app').addEventListener('input',e=>{const t=e.target;
@@ -1800,6 +1810,7 @@ function keepScroll(fn){const p=$('#panel'),s=p.scrollTop;fn();p.scrollTop=s;}
 
 /* ===== SMS ===== */
 async function sendSms(text,who){
+  const out=window.I18N?I18N.t(text):text; // mensaje en el idioma elegido; en pantalla se guarda el original
   const me=S.phone.replace(/\D/g,'');
   let targets=[];
   if(who==='me'){if(me.length<9){toast('Escribe tu número de celular (9 dígitos) abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}targets=[{name:'Tú',phone:me}];}
@@ -1811,15 +1822,15 @@ async function sendSms(text,who){
   const nums=targets.map(t=>'+51'+t.phone);
   if(SMS_ENDPOINT){
     try{
-      const rs=await Promise.all(targets.map(t=>fetch(SMS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:'+51'+t.phone,body:text})}).then(async r=>({ok:r.ok,...(await r.json().catch(()=>({})))})).catch(()=>({ok:false,error:'Sin conexión'}))));
+      const rs=await Promise.all(targets.map(t=>fetch(SMS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:'+51'+t.phone,body:out})}).then(async r=>({ok:r.ok,...(await r.json().catch(()=>({})))})).catch(()=>({ok:false,error:'Sin conexión'}))));
       const okN=rs.filter(r=>r.ok),wa=okN.filter(r=>r.canal==='whatsapp').length,sm=okN.length-wa,bad=rs.length-okN.length;
       const parts=[];if(wa)parts.push(`WhatsApp a ${wa}`);if(sm)parts.push(`SMS a ${sm}`);
       if(!bad)toast('Enviado: '+parts.join(' y '));
       else{const why=(rs.find(r=>!r.ok)||{}).error||'Revisa la configuración.';toast(`${okN.length?'Enviado: '+parts.join(' y ')+'. ':''}No llegó a ${bad}: ${why}`.slice(0,140));}
     }catch(e){toast('No se pudo enviar. Revisa la conexión.');}
   } else if(/Android|iPhone|iPad/i.test(navigator.userAgent)){
-    if(nums.length===1)location.href=`https://wa.me/${nums[0].slice(1)}?text=${encodeURIComponent(text)}`;
-    else location.href=`sms:${nums.join(',')}${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(text)}`;
+    if(nums.length===1)location.href=`https://wa.me/${nums[0].slice(1)}?text=${encodeURIComponent(out)}`;
+    else location.href=`sms:${nums.join(',')}${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(out)}`;
   } else toast(who==='me'?'Así llegará a tu celular.':`Así llegará a ${targets.length} personas de tu comunidad.`);
 }
 
@@ -1827,8 +1838,8 @@ async function sendSms(text,who){
 let speaking=null;
 function speak(btn){if(!('speechSynthesis' in window)){toast('Tu navegador no puede leer en voz alta.');return;}
   if(speaking===btn){stopSpeak();return;}stopSpeak();
-  const u=new SpeechSynthesisUtterance(btn.closest('.bubble').querySelector('.txt').textContent);u.lang='es-PE';u.rate=0.95;
-  const vs=speechSynthesis.getVoices(),es=vs.find(v=>/es[-_](PE|419|MX|US)/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang));if(es)u.voice=es;
+  const u=new SpeechSynthesisUtterance(btn.closest('.bubble').querySelector('.txt').textContent);const en=window.I18N&&I18N.lang==='en';u.lang=en?'en-US':'es-PE';u.rate=0.95;
+  const vs=speechSynthesis.getVoices(),es=en?(vs.find(v=>/^en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))):(vs.find(v=>/es[-_](PE|419|MX|US)/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang)));if(es)u.voice=es;
   u.onend=()=>{btn.classList.remove('on');speaking=null;};btn.classList.add('on');speaking=btn;speechSynthesis.speak(u);}
 function stopSpeak(){if('speechSynthesis' in window)speechSynthesis.cancel();if(speaking)speaking.classList.remove('on');speaking=null;}
 
@@ -1851,6 +1862,7 @@ $('#brandMark').innerHTML=logoSVG();
 $('#fbIcon').innerHTML=icm('map',40,1.6);
 load();
 if(S.user||S.parcels.length){S.screen='parcels';if(S.parcels[0])S.cur=S.parcels[0].id;}
+window.__yachiraqRender=()=>keepScroll(render);
 render();initMap();loadPower();
 })();
 

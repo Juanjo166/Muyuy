@@ -76,6 +76,13 @@ Después: **Deploys → Trigger deploy**.
 
 **Quién puede recibir:** el plan gratuito limita los chats, así que `suscriptores.json` lleva como máximo **3 números del equipo** (`519XXXXXXXX`, sin `+`). La función `sms` **solo envía a esos números** y limita los envíos por minuto. Para escribir a otro número en una prueba manual, agrega `"clave":"<DEMO_KEY>"` al POST.
 
+## Idioma inglés (para el jurado)
+El selector **ES · EN · QU** está arriba a la derecha. También se puede abrir directo en inglés con `?lang=en` (ej. `https://SU-SITIO.netlify.app/?lang=en`).
+
+La traducción está en `i18n.js`: un diccionario hecho a mano, frase por frase, que traduce solo lo que se ve en pantalla. La lógica de la app no cambia (las claves internas siguen en español). Así se evitan errores como traducir "papa" por "pope".
+
+**Si agregan un texto nuevo en `index.html`**, agréguenlo también en `i18n.js` (en `EX` si es fijo, en `PAT` si lleva números o fechas). Para ver qué falta, abran la app con `?lang=en&i18n=debug` y miren la consola: lista los textos que siguen en español.
+
 ## En el demo
 - **Alerta automática en vivo:** abre `https://algo.netlify.app/.netlify/functions/alertas-ahora?clave=TU_CLAVE`. Si el pronóstico trae helada o lluvia fuerte, el SMS llega a los celulares de `suscriptores.json`. La respuesta muestra qué se envió o la temperatura mínima si no hubo alerta.
 - **Si el pronóstico real no trae helada esa semana:** abre la app con `?demo` al final del enlace (`https://algo.netlify.app/?demo`) para ver las alertas con valores de ejemplo. Díganlo así en el pitch: "esta semana no hay helada; así se ve cuando la hay".
