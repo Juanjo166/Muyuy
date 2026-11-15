@@ -10,7 +10,7 @@ Alertas de helada, lluvia y sequía para las parcelas de Chiara (Ayacucho), con 
 |---|---|
 | `index.html` | La app completa. |
 | `suscriptores.json` | Parcelas y celulares que reciben la alerta automática diaria. |
-| `netlify/functions/sms.mjs` | Envía un SMS con Twilio (la app lo usa al tocar "Enviarme SMS"). |
+| `netlify/functions/sms.mjs` | Envía la alerta por WhatsApp (Green-API) o SMS (Twilio) al tocar "Enviarme WhatsApp". |
 | `netlify/functions/alertas-diarias.mjs` | Todos los días a las 5 a. m. (hora de Lima) revisa el pronóstico y envía SMS si viene helada o lluvia fuerte. |
 | `netlify/functions/alertas-ahora.mjs` | Lo mismo, pero en el momento: para mostrarlo en el demo. |
 | `gee_anomalia_chiara.js` | Script de Google Earth Engine: calcula la anomalía de lluvia (GPM IMERG) y de humedad del suelo (SMAP). |
@@ -52,21 +52,23 @@ Las funciones (SMS y alertas) **no funcionan con "arrastrar y soltar"**: hay que
 
 La app detecta sola que está en Netlify y envía los SMS por la función. Fuera de Netlify, en un celular, el botón abre la app de mensajes con el texto escrito.
 
-## WhatsApp con CallMeBot (canal principal) y SMS de respaldo
-Las alertas salen por **WhatsApp (CallMeBot, gratis)**. Si un número no tiene API key, salen por **SMS con Twilio** (si está configurado). Todo el envío está en `netlify/lib/enviar.mjs`.
+## WhatsApp con Green-API (canal principal) y SMS de respaldo
+Las alertas salen por **WhatsApp con Green-API** (plan Developer gratuito, instancia vinculada por QR). Si falla, salen por **SMS con Twilio** (si está configurado). Todo el envío está en `netlify/lib/enviar.mjs`.
 
-**Activar a cada persona (una vez, la hace cada dueño del celular):** sigue las instrucciones de https://www.callmebot.com/blog/free-api-whatsapp-messages/ (agregar el contacto de CallMeBot y enviarle el mensaje de activación). CallMeBot responde por WhatsApp con la **API key** de ese número.
+**Crear la instancia:** en https://green-api.com crea una instancia Developer, escanea el QR con el WhatsApp que enviará los mensajes y copia el `idInstance` y el `apiTokenInstance`.
 
-**Poner las keys en Netlify (no en el repo, que es público):** **Site configuration → Environment variables**:
+**Variables en Netlify** (**Site configuration → Environment variables**):
 
 | Nombre | Valor |
 |---|---|
-| `CALLMEBOT_KEYS` | `{"51943038635":"KEY1","519XXXXXXXX":"KEY2"}`: teléfono sin `+` y su key |
+| `GREEN_ID_INSTANCE` | el `idInstance` de la instancia |
+| `GREEN_API_TOKEN` | el `apiTokenInstance` |
+| `GREEN_API_URL` | *(solo si tu instancia usa otro host, ej. `https://7103.api.greenapi.com`)* |
 | `CANAL` | *(opcional)* `auto` (por defecto), `whatsapp` o `sms` |
 
-Después: **Deploys → Trigger deploy**. En `suscriptores.json` los teléfonos van como `519XXXXXXXX`, **sin keys**.
+Después: **Deploys → Trigger deploy**.
 
-En la app, el campo "API key de CallMeBot" es opcional: sirve para números que no están en `CALLMEBOT_KEYS`.
+**Quién puede recibir:** el plan gratuito limita los chats, así que `suscriptores.json` lleva como máximo **3 números del equipo** (`519XXXXXXXX`, sin `+`). La función `sms` **solo envía a esos números** y limita los envíos por minuto. Para escribir a otro número en una prueba manual, agrega `"clave":"<DEMO_KEY>"` al POST.
 
 ## En el demo
 - **Alerta automática en vivo:** abre `https://algo.netlify.app/.netlify/functions/alertas-ahora?clave=TU_CLAVE`. Si el pronóstico trae helada o lluvia fuerte, el SMS llega a los celulares de `suscriptores.json`. La respuesta muestra qué se envió o la temperatura mínima si no hubo alerta.

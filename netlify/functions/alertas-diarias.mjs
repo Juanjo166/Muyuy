@@ -1,8 +1,8 @@
-// Muyuy: revisa cada mañana el pronóstico de cada parcela suscrita y envía WhatsApp (CallMeBot; respaldo SMS) si viene helada o lluvia fuerte.
+// Muyuy: revisa cada mañana el pronóstico de cada parcela suscrita y envía WhatsApp (Green-API; respaldo SMS con Twilio) si viene helada o lluvia fuerte.
 // Corre sola todos los días a las 5:00 a. m. hora de Lima (10:00 UTC).
 // Para probarla en el demo: en Netlify > Functions > alertas-diarias > "Run now".
-// Parcelas y teléfonos: archivo suscriptores.json (teléfonos como 519XXXXXXXX, sin keys).
-// Las API keys de CallMeBot van en la variable de entorno CALLMEBOT_KEYS de Netlify.
+// Parcelas y teléfonos: archivo suscriptores.json (teléfonos como 519XXXXXXXX; máximo 3 por el plan gratuito de Green-API).
+// Las credenciales (GREEN_ID_INSTANCE, GREEN_API_TOKEN) van en variables de entorno de Netlify.
 import { enviar } from '../lib/enviar.mjs';
 
 const FROST_C = 0;   // avisar si la mínima es 0 °C o menos
