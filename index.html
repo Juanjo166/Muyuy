@@ -927,11 +927,11 @@ function climFor(alt){
 }
 
 /* ===== State & storage ===== */
-const KEY='muyuy.v6'; // clave interna: se mantiene para no perder las parcelas guardadas
+const KEY='yachiraq.v6',OLD_KEY='muyuy.v6'; // OLD_KEY: nombre anterior del proyecto; se migra una vez para no perder las parcelas guardadas
 const S={screen:'welcome',user:'',parcels:[],cur:null,tab:'hoy',contacts:[],done:{},skipPlan:false,
   draft:[],selV:null,editing:null,quiz:null,phone:'',smsOn:true,smsSent:[],gpsAt:null};
 function save(){try{localStorage.setItem(KEY,JSON.stringify({user:S.user,parcels:S.parcels,phone:S.phone,smsOn:S.smsOn,contacts:S.contacts,done:S.done}));}catch(e){}}
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.user=d.user||'';S.parcels=d.parcels||[];S.phone=d.phone||'';S.smsOn=d.smsOn!==false;S.contacts=d.contacts||[];S.done=d.done||{};}}catch(e){}}
+function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);const d=JSON.parse(raw||'null');if(d&&!localStorage.getItem(KEY)){localStorage.setItem(KEY,raw);localStorage.removeItem(OLD_KEY);}if(d){S.user=d.user||'';S.parcels=d.parcels||[];S.phone=d.phone||'';S.smsOn=d.smsOn!==false;S.contacts=d.contacts||[];S.done=d.done||{};}}catch(e){}}
 const curP=()=>S.parcels.find(p=>p.id===S.cur);
 const uid=()=>Math.random().toString(36).slice(2,9);
 
