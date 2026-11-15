@@ -341,7 +341,14 @@
     'Demasiados envíos seguidos. Espera un minuto.': 'Too many messages in a row. Wait a minute.',
     'Sin conexión': 'No connection', 'Revisa la configuración.': 'Check the configuration.',
     'Número no válido. Usa 9 dígitos que empiecen con 9.': 'Invalid number. Use 9 digits starting with 9.',
-    'descanso': 'fallow', 'por definir': 'to be decided'
+    'descanso': 'fallow', 'por definir': 'to be decided',
+    // Tour corto para dibujar la parcela
+    'Paso 1 de 2': 'Step 1 of 2', 'Paso 2 de 2': 'Step 2 of 2',
+    'Toca en el mapa cada esquina de tu parcela.': 'Tap each corner of your field on the map.',
+    'Una por una, dando la vuelta.': 'One at a time, all the way around.',
+    'Cuando termines, toca aquí.': 'When you finish, tap here.',
+    'Si un punto quedó mal, arrástralo.': 'If a point is off, drag it.',
+    'Saltar': 'Skip', 'Entendido': 'Got it', '¿Cómo dibujo?': 'How do I draw?'
   };
   for (const k of Object.keys(NAMES)) EX[k] = NAMES[k];
   const EXL = {};
