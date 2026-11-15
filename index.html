@@ -460,6 +460,7 @@ header.top{background:rgba(255,255,255,.82);-webkit-backdrop-filter:saturate(1.4
 .legend{border-radius:var(--r-md);background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.7);box-shadow:var(--sh-2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .legend .row i{border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 .town-marker{background:rgba(24,35,46,.9);box-shadow:var(--sh-2)}
+.pilot-label{background:rgba(255,255,255,.92);color:var(--green);font:700 12px Inter,system-ui,sans-serif;padding:5px 10px;border-radius:999px;box-shadow:var(--sh-2);white-space:nowrap;pointer-events:none}
 .parcel-marker{transition:transform .2s var(--ease),box-shadow .2s;box-shadow:0 4px 14px rgba(24,35,46,.28)}
 .parcel-marker:hover{transform:translateY(-2px) scale(1.03)}
 .parcel-marker.sel{box-shadow:0 6px 18px rgba(200,54,27,.4)}
@@ -842,6 +843,11 @@ const inWin=(m,w)=>w[0]<=w[1]?(m>=w[0]&&m<=w[1]):(m>=w[0]||m<=w[1]);
 
 /* ===== Climate: NASA POWER (live if online, reference values otherwise) ===== */
 const TOWN={lng:-74.2058,lat:-13.2730,alt:3527};
+/* Piloto: Muyuy solo tiene datos de cultivos, calendario y clima de referencia de Chiara. Zona aproximada: 12 km alrededor del pueblo (el distrito mide ~460 km²). */
+const PILOT_KM=12;
+const distKm=(lng,lat)=>Math.hypot((lng-TOWN.lng)*111.32*Math.cos(TOWN.lat*Math.PI/180),(lat-TOWN.lat)*110.574);
+const inPilot=poly=>{const [x,y]=poly.reduce((a,p)=>[a[0]+p[0]/poly.length,a[1]+p[1]/poly.length],[0,0]);return distKm(x,y)<=PILOT_KM;};
+function pilotRing(){const r=[];for(let i=0;i<=72;i++){const a=i/72*2*Math.PI;r.push([TOWN.lng+PILOT_KM*Math.cos(a)/(111.32*Math.cos(TOWN.lat*Math.PI/180)),TOWN.lat+PILOT_KM*Math.sin(a)/110.574]);}return r;}
 const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
 const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];
 const MF=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
@@ -1245,6 +1251,14 @@ function initMap(){
       mapReady=true;
       try{if(map.setSky)map.setSky({'sky-color':'#A9CBE0','horizon-color':'#E9E3D3','fog-color':'#E9E3D3','sky-horizon-blend':0.6,'horizon-fog-blend':0.7,'fog-ground-blend':0.35});}catch(e){}
       const E={type:'FeatureCollection',features:[]};
+      const ring=pilotRing(),W=1.6;
+      map.addSource('pilot',{type:'geojson',data:{type:'FeatureCollection',features:[
+        {type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[[[TOWN.lng-W,TOWN.lat-W],[TOWN.lng+W,TOWN.lat-W],[TOWN.lng+W,TOWN.lat+W],[TOWN.lng-W,TOWN.lat+W],[TOWN.lng-W,TOWN.lat-W]],ring.slice().reverse()]}},
+        {type:'Feature',properties:{line:1},geometry:{type:'LineString',coordinates:ring}}]}});
+      map.addLayer({id:'pilot-mask',type:'fill',source:'pilot',filter:['==','$type','Polygon'],paint:{'fill-color':'#18232E','fill-opacity':0.5}});
+      map.addLayer({id:'pilot-line',type:'line',source:'pilot',filter:['==','$type','LineString'],paint:{'line-color':'#fff','line-width':2,'line-opacity':0.85,'line-dasharray':[3,2]}});
+      const pl=document.createElement('div');pl.className='pilot-label';pl.textContent='Zona del piloto: Chiara (aprox.)';
+      new maplibregl.Marker({element:pl,anchor:'top'}).setLngLat(ring[54]).addTo(map);
       map.addSource('parcels',{type:'geojson',data:E});map.addSource('draft',{type:'geojson',data:E});
       map.addLayer({id:'p-fill',type:'fill',source:'parcels',paint:{'fill-color':['get','color'],'fill-opacity':['get','op']}});
       map.addLayer({id:'p-halo',type:'line',source:'parcels',paint:{'line-color':'#fff','line-width':['case',['get','sel'],5,3]}});
@@ -1397,9 +1411,9 @@ function cropPicker(act,list,selected,multi){
 const CROP_LIST=['Papa','Papa nativa','Maíz','Haba','Quinua','Tarwi','Cebada','Avena','Oca','Pastos','Descanso'];
 const V={
 welcome(){return {html:`
-  <p class="eyebrow">Chiara, Ayacucho</p>
+  <span class="tag ok" style="margin-bottom:10px">${ic('pin',13)} Piloto en Chiara, Ayacucho</span>
   <h1 class="title">Decide qué sembrar los próximos 3 años, cuidando tu suelo y tu agua</h1>
-  <p class="lead">Muyuy compara rotaciones para cada parcela con datos de satélites de la NASA, y te avisa antes de una helada o lluvia fuerte.</p>
+  <p class="lead">Muyuy compara rotaciones para cada parcela con datos de satélites de la NASA, y te avisa antes de una helada o lluvia fuerte. <b>Por ahora funciona solo para parcelas del distrito de Chiara.</b></p>
   <div class="how3"><div><span class="hi">${ic('pin',22)}</span>Marca tus parcelas</div><div><span class="hi">${ic('leaf',22)}</span>Compara 3 rotaciones</div><div><span class="hi">${ic('bell',22)}</span>Te avisamos de heladas</div></div>
   <button class="option" data-act="ciencia"><span class="oi">${ic('sat',22)}</span><div><b>Cómo funciona</b><span>Datos de la NASA y cómo decidimos</span></div></button>
   <div class="card"><label for="uname" class="ql">¿Cómo te llamas?</label><span class="qh">Para saludarte. No necesitas cuenta.</span><input id="uname" class="input" placeholder="Ej. Rosa" value="${S.user}" maxlength="24" autocomplete="given-name"></div>
@@ -1453,8 +1467,9 @@ draw(){const n=S.draft.length;return {html:`${flowBack()}
   <p class="eyebrow">${S.editing?'Editar parcela':'Nueva parcela, paso 1 de 2'}</p><h1 class="title">${S.editing?'Ajusta la forma':'Dibuja tu parcela'}</h1>
   <div class="card"><div class="kv"><div><div class="k">Puntos</div><div class="v" id="drawN">${n}</div></div><div><div class="k">Tamaño</div><div class="v" id="drawArea">${n>2?fmtHa(areaHa(S.draft)):'—'}</div></div></div></div>
   ${S.selV!=null?`<div class="card" style="display:flex;align-items:center;gap:10px;justify-content:space-between"><span style="font-weight:700;font-size:15px">Punto ${S.selV+1} seleccionado</span><button class="btn btn-danger" data-act="delV" ${n<=3?'disabled':''} style="min-height:44px">${icm('trash',17)} Quitar punto</button></div>`:''}
+  ${n>2&&!inPilot(S.draft)?`<div class="review"><b>Esta parcela está fuera de Chiara.</b> Muyuy solo tiene datos de cultivos y clima de Chiara, así que no podemos recomendarte una rotación aquí. Dibuja tu parcela dentro de la zona del piloto (la línea blanca del mapa).</div>`:''}
   <p class="small">Acerca el mapa con dos dedos o la rueda del mouse. Toca un punto para seleccionarlo.</p>`,
-  cta:`<div class="btn-row"><button class="btn btn-ghost" data-act="undo" ${n?'':'disabled'}>Deshacer</button><button class="btn btn-ghost" data-act="clearDraw" ${n?'':'disabled'}>Borrar todo</button></div>${primary(S.editing?'Guardar forma':'Listo, siguiente','finishDraw',n<3)}`};},
+  cta:`<div class="btn-row"><button class="btn btn-ghost" data-act="undo" ${n?'':'disabled'}>Deshacer</button><button class="btn btn-ghost" data-act="clearDraw" ${n?'':'disabled'}>Borrar todo</button></div>${primary(S.editing?'Guardar forma':'Listo, siguiente','finishDraw',n<3||!inPilot(S.draft))}`};},
 
 analyzing(){return {html:`<div class="loading"><div class="spinner"></div><div>Midiendo tu parcela con los satélites de la NASA…</div>
   <ul class="steps-check" id="anSteps"><li><span class="d">${icm('check',13,3)}</span>Tamaño de la parcela</li><li><span class="d">${icm('check',13,3)}</span>Altura y piso (SRTM)</li><li><span class="d">${icm('check',13,3)}</span>Pendiente del terreno</li><li><span class="d">${icm('check',13,3)}</span>Clima del lugar (NASA POWER)</li></ul></div>`,cta:''};},
@@ -1512,6 +1527,11 @@ ciencia(){
     </ul>
     <details><summary>¿Por qué reglas y no inteligencia artificial?</summary><div class="body">No hay todavía datos de cosechas de Chiara para entrenar un modelo. Un modelo de IA entrenado con otras regiones podría equivocarse aquí sin que nadie lo note. Las reglas se pueden leer, discutir y corregir con los técnicos y los agricultores. Cuando haya datos de campo (rendimientos, análisis de suelo), se pueden usar para calibrar los puntos o entrenar un modelo, comparándolo siempre con estas reglas.</div></details>
     <details><summary>¿Qué tan seguros estamos?</summary><div class="body">Cada rotación muestra su nivel de confianza según cuántas fuentes llegaron en vivo. Los datos de cultivos (cuánto tardan, cuánta agua piden) son referencias generales de la FAO y el INIA, y deben validarse con variedades locales. Lo que no sabemos, como el precio de venta o la semilla disponible, lo decimos en cada rotación.</div></details></div>
+  <div class="card"><h3>¿Dónde funciona?</h3>
+    <p style="font-size:14.5px;line-height:1.5;margin:0">Muyuy es un <b>piloto en el distrito de Chiara</b> (Ayacucho), entre 3,000 y 4,300 m: unos ${PILOT_KM} km alrededor del pueblo, marcados en el mapa. Fuera de esa zona no damos recomendaciones.</p>
+    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Los datos de la NASA cubren todo el mundo. Lo que es de Chiara es:</p>
+    <ul style="font-size:14.5px;line-height:1.5;margin:6px 0 0;padding-left:20px"><li>los cultivos y sus épocas de siembra (calendario de lluvias de la sierra sur);</li><li>los pisos de altura quechua, suni y puna;</li><li>la referencia local de temperatura para corregir NASA POWER;</li><li>el cálculo de lluvia y humedad del suelo en Earth Engine.</li></ul>
+    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Para llevar Muyuy a otra zona hay que cambiar esas 4 cosas, de preferencia con técnicos y agricultores del lugar.</p></div>
   <div class="card"><h3>Palabras que usamos</h3><dl class="gloss">
     <dt>Rotación</dt><dd>Cambiar de cultivo en la misma parcela año tras año. Corta el ciclo de las plagas y cuida el suelo.</dd>
     <dt>Leguminosa</dt><dd>Plantas como la haba, el tarwi o la vicia. Toman nitrógeno del aire y lo dejan en el suelo como abono natural.</dd>
@@ -1663,6 +1683,7 @@ function bindCarousel(){
 function newQuiz(poly,stats){return {id:uid(),name:'Parcela '+(S.parcels.length+1),crops:[],sownI:null,prev:[],plan:null,purpose:'casa',water:'secano',animals:'si',poly,stats};}
 async function finishDraw(){
   const poly=S.draft.slice();if(poly.length<3)return;
+  if(!inPilot(poly)){toast('Esta parcela está fuera de Chiara. Muévela dentro de la zona del piloto.');return;}
   if(S.editing){const p=S.parcels.find(x=>x.id===S.editing);p.poly=poly;S.screen='analyzing';render();clearHandles();
     const [st]=await Promise.all([analyze(poly,p.stats.alt),wait(1400)]);p.stats=st;save();S.editing=null;S.draft=[];toast('Forma guardada. Volvimos a medir tu parcela.');openParcel(p.id,'datos');return;}
   go('analyzing');clearHandles();animateSteps();
@@ -1707,7 +1728,7 @@ $('#app').addEventListener('click',async e=>{
       toast('Buscando tu ubicación…');
       navigator.geolocation.getCurrentPosition(pos=>{
         const ll=[pos.coords.longitude,pos.coords.latitude],d=Math.hypot((ll[0]-TOWN.lng)*M_LNG(TOWN.lat),(ll[1]-TOWN.lat)*M_LAT);
-        if(d>40000){toast('Estás lejos de Chiara: te llevamos al centro del distrito.');S.gpsAt=[TOWN.lng,TOWN.lat];}else S.gpsAt=ll;
+        if(d>PILOT_KM*1000){toast('Muyuy por ahora funciona solo en Chiara: te llevamos al centro del distrito.');S.gpsAt=[TOWN.lng,TOWN.lat];}else S.gpsAt=ll;
         if(mapReady){if(meMarker)meMarker.remove();const el=document.createElement('div');el.className='me-dot';meMarker=new maplibregl.Marker({element:el}).setLngLat(S.gpsAt).addTo(map);
           map.flyTo({center:S.gpsAt,zoom:17.3,pitch:45,bearing:0,speed:1.1,curve:1.6,essential:true});}
         S.draft=[];go('draw');
