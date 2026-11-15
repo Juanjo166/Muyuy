@@ -465,7 +465,7 @@ header.top{border-bottom-color:var(--line)}
 const SMS_ENDPOINT=/netlify\.app$/.test(location.hostname)?'/.netlify/functions/sms':'';
 /* ANOM_CONFIG: pega aquí la línea que imprime el script de Earth Engine (gee_anomalia_chiara.js).
    rainPct: % de lluvia vs. lo normal (GPM IMERG). soilPct: % de humedad del suelo vs. lo normal (SMAP). */
-const ANOM_CONFIG={rainPct:-32,soilPct:-18,period:'últimos 30 días',live:false};
+const ANOM_CONFIG={rainPct:-20,soilPct:-22,period:'15 Oct al 14 Nov 2026',live:true};
 
 const $=s=>document.querySelector(s);
 
