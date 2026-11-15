@@ -6,7 +6,7 @@ Yachiraq compares 3-year crop rotations for each field using NASA Earth observat
 
 - **Live app:** https://yachiraq.netlify.app/?lang=en (English) · https://yachiraq.netlify.app (español)
 - **Pitch and data sources:** [PITCH.md](PITCH.md)
-- **Setup guide (Spanish):** [LEEME.md](LEEME.md) and [PASO-A-PASO.md](PASO-A-PASO.md)
+- **Setup guide (Spanish):** [LEEME.md](LEEME.md)
 
 ---
 

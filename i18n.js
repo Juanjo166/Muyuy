@@ -32,7 +32,7 @@
   const name = s => { s = String(s); if (NAMES[s]) return NAMES[s]; const m = s.match(/^Parcela (\d+)$/); return m ? 'Field ' + m[1] : s; };
   const ZONE = { quechua: 'Quechua', suni: 'Suni', puna: 'Puna' };
   const zone = s => ZONE[String(s).toLowerCase()] || s;
-  const SOILST = { 'más seca de lo normal': 'drier than normal', 'más húmeda de lo normal': 'wetter than normal', 'con humedad normal': 'at normal moisture' };
+  const SOILST = { 'más seca de lo normal': 'drier than normal', 'más húmeda de lo normal': 'wetter than normal', 'con humedad normal': 'at normal moisture', 'más seco de lo normal': 'drier than normal', 'más húmedo de lo normal': 'wetter than normal' };
   const soilSt = s => SOILST[s] || s;
   const STRAT = { 'seguir como ahora': 'keep as now', 'cuidar el suelo': 'protect the soil', 'menos agua, más venta': 'less water, more sales' };
   const strat = s => STRAT[String(s).toLowerCase()] || s;

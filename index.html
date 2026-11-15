@@ -1010,7 +1010,7 @@ const noAcc=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/°/g,'');
 /* ===== Observed anomaly (NASA) and forecast (SENAMHI) =====
    En producción: ANOM se calcula con GPM IMERG (lluvia de los últimos 30 días vs. el promedio)
    y SMAP (humedad del suelo). FCST viene del pronóstico diario del SENAMHI. Aquí: valores de ejemplo. */
-const ANOM={rainPct:ANOM_CONFIG.rainPct,soil:ANOM_CONFIG.soilPct<=-10?'más seca de lo normal':ANOM_CONFIG.soilPct>=10?'más húmeda de lo normal':'con humedad normal',period:ANOM_CONFIG.period,live:ANOM_CONFIG.live};
+const ANOM={rainPct:ANOM_CONFIG.rainPct,soil:ANOM_CONFIG.soilPct<=-10?'más seca de lo normal':ANOM_CONFIG.soilPct>=10?'más húmeda de lo normal':'con humedad normal',soilM:ANOM_CONFIG.soilPct<=-10?'más seco de lo normal':ANOM_CONFIG.soilPct>=10?'más húmedo de lo normal':'con humedad normal',period:ANOM_CONFIG.period,live:ANOM_CONFIG.live};
 const FCST={frostDay:nextDow(4),frostDelta:-5,rainDay:nextDow(0),rainMM:35,live:false};
 /* Pronóstico real por parcela: Open-Meteo (gratis, sin clave), ajustado a la altura de la parcela */
 const FC={};
@@ -1201,7 +1201,7 @@ function rotDetail(p,r){
   const ev=[
     `Pendiente de ${p.stats.slope} % y altura de ${fmtM(p.stats.alt)} (SRTM, NASA)${p.stats.real?'':', medida aproximada'}.`,
     `Unas ${fN} noches de helada al año y meses de lluvia fuerte (NASA POWER${CLIM.live?'':', valores de referencia'}).`,
-    `Lluvia del último mes ${ANOM.rainPct>=0?'+':''}${ANOM.rainPct} % vs. lo normal; suelo ${ANOM.soil} (GPM IMERG y SMAP${ANOM.live?'':', ejemplo'}).`,
+    `Lluvia del último mes ${ANOM.rainPct>=0?'+':''}${ANOM.rainPct} % vs. lo normal; suelo ${ANOM.soilM} (GPM IMERG y SMAP${ANOM.live?'':', ejemplo'}).`,
     `Verdor de la vegetación ${nd.pct>=0?'+':''}${nd.pct} % vs. los 3 años anteriores (MODIS NDVI${nd.live?', '+nd.date:', ejemplo'}).`,
     `Carbono orgánico ${soil.soc} g/kg (${socLvl(soil.soc)}), suelo ${texture(soil)}, pH ${soil.ph} (SoilGrids${soil.live?'':', valor típico de la zona'}).`
   ];
@@ -1624,7 +1624,7 @@ parcel(){
       </div>
       <div class="card"><h3>Lo que ven los satélites este mes</h3>
         <div class="cmpbars"><div><span>Lluvia normal en ${MF[NM]}</span><i style="width:100%"></i><b>${cl.rain[NM]} mm</b></div><div><span>Lluvia de los ${ANOM.period}</span><i style="width:${100+ANOM.rainPct}%;background:#E8A317"></i><b>${Math.round(cl.rain[NM]*(1+ANOM.rainPct/100))} mm</b></div></div>
-        <p style="margin:12px 0 0;font-size:15px;line-height:1.5">Llovió <b>${-ANOM.rainPct} % menos</b> de lo normal y el suelo está ${ANOM.soil}.</p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.5">Llovió <b>${-ANOM.rainPct} % menos</b> de lo normal y el suelo está ${ANOM.soilM}.</p>
         <span class="tag sat" style="margin-top:10px">${ic('sat',13)} GPM IMERG + SMAP${ANOM.live?', '+ANOM.period:', valores de ejemplo'}</span>
         ${(nd=>`<p style="margin:14px 0 0;font-size:15px;line-height:1.5;border-top:1px solid #EEF1EF;padding-top:12px">Las plantas de tu zona están <b>${Math.abs(nd.pct)<5?'tan verdes como siempre':nd.pct<0?Math.abs(nd.pct)+' % menos verdes':nd.pct+' % más verdes'}</b> que en esta fecha los 3 años anteriores.${nd.pct<=-10?' Puede ser falta de agua: revisa tus cultivos.':''}</p>
         <span class="tag sat" style="margin-top:10px">${ic('sat',13)} MODIS NDVI${nd.live?', '+nd.date:nd.loading?', cargando…':', valor de ejemplo'}</span>`)(ndviOf(p))}</div>
