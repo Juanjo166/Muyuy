@@ -1,4 +1,4 @@
-# Muyuy: cómo dejarlo funcionando
+# Yachiraq: cómo dejarlo funcionando
 
 > **Empieza por `PASO-A-PASO.md`:** es la lista de pendientes con casillas, en orden, con el reparto de tareas y la solución a los problemas comunes.
 

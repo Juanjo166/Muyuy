@@ -1,4 +1,4 @@
-// Muyuy: revisa cada mañana el pronóstico de cada parcela suscrita y envía WhatsApp (Green-API; respaldo SMS con Twilio) si viene helada o lluvia fuerte.
+// Yachiraq: revisa cada mañana el pronóstico de cada parcela suscrita y envía WhatsApp (Green-API; respaldo SMS con Twilio) si viene helada o lluvia fuerte.
 // Corre sola todos los días a las 5:00 a. m. hora de Lima (10:00 UTC).
 // Para probarla en el demo: en Netlify > Functions > alertas-diarias > "Run now".
 // Parcelas y teléfonos: archivo suscriptores.json (teléfonos como 519XXXXXXXX; máximo 3 por el plan gratuito de Green-API).
@@ -22,10 +22,10 @@ export default async () => {
     const msgs = [];
     const cold = days.reduce((a, b) => (b.tmin < a.tmin ? b : a));
     if (cold.tmin <= FROST_C)
-      msgs.push(`MUYUY: Helada el ${dia(cold.t)} (${Math.round(cold.tmin)}C) en ${s.parcela}. Cubre con paja y prende humo antes del amanecer.`);
+      msgs.push(`YACHIRAQ: Helada el ${dia(cold.t)} (${Math.round(cold.tmin)}C) en ${s.parcela}. Cubre con paja y prende humo antes del amanecer.`);
     const wet = days.reduce((a, b) => (b.rain > a.rain ? b : a));
     if (wet.rain >= RAIN_MM)
-      msgs.push(`MUYUY: Lluvia fuerte el ${dia(wet.t)} (${Math.round(wet.rain)}mm) en ${s.parcela}. Limpia zanjas y canales.`);
+      msgs.push(`YACHIRAQ: Lluvia fuerte el ${dia(wet.t)} (${Math.round(wet.rain)}mm) en ${s.parcela}. Limpia zanjas y canales.`);
 
     for (const body of msgs)
       for (const to of s.telefonos) {

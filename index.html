@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F7A4D">
-<title>Muyuy, Rotaciones para cada parcela</title>
+<title>Yachiraq, Rotaciones para cada parcela</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='3' y='3' width='94' height='94' rx='25' fill='%23098A2A'/%3E%3Cpath d='M50 80V53' stroke='%23B9F92A' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M50 55C49 40 38 28.5 13 29.5C14 46.5 24.5 59 44 62C48 62.6 50 60 50 55Z' fill='%2396EC22'/%3E%3Cpath d='M50 54C51 39 62 27.5 87 28.5C86 45.5 75.5 58 56 61C52 61.6 50 59 50 54Z' fill='%2396EC22'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -594,11 +594,19 @@ summary:hover{color:var(--green-2)}
 /* ===== v8: splash, logo, rotaciones y "Cómo funciona" ===== */
 .brand-mark{background:none!important;padding:0;box-shadow:0 2px 6px rgba(3,70,26,.25);border-radius:10px;overflow:hidden}
 .brand-mark svg{width:34px;height:34px;display:block}
-.splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#fff;cursor:pointer;transition:opacity .45s ease}
+.splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;cursor:pointer;transition:opacity .45s ease;padding:24px}
 .splash.out{opacity:0;pointer-events:none}
-.splash svg{width:min(34vw,148px);height:auto;animation:spIn .7s cubic-bezier(.34,1.56,.64,1) both}
+.splash .sp-main{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:-6vh}
+.splash svg{width:min(32vw,132px);height:auto;animation:spIn .7s cubic-bezier(.34,1.56,.64,1) both}
+.splash .sp-name{margin-top:20px;font-size:34px;font-weight:700;letter-spacing:-.3px;color:var(--ink);animation:spUp .5s .25s ease both}
+.splash .sp-tag{margin-top:6px;font-size:16px;line-height:1.4;color:var(--muted);max-width:min(86vw,340px);animation:spUp .5s .35s ease both}
+.splash .sp-by{position:absolute;left:0;right:0;bottom:max(32px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:10px;animation:spUp .5s .5s ease both}
+.splash .sp-by img{width:34px;height:34px;border-radius:50%;object-fit:cover;box-shadow:0 2px 8px rgba(18,12,48,.25)}
+.splash .sp-by span{font-size:12px;color:var(--muted);letter-spacing:.4px;line-height:1.25;text-align:left}
+.splash .sp-by b{display:block;font-size:14px;color:#2A1F5C;letter-spacing:2.5px}
 @keyframes spIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){.splash svg{animation:none}}
+@keyframes spUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.splash *{animation:none!important}}
 
 /* Rotaciones */
 .prios{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
@@ -654,7 +662,8 @@ summary:hover{color:var(--green-2)}
 </style>
 </head>
 <body>
-<div class="splash" id="splash" role="img" aria-label="Muyuy">
+<div class="splash" id="splash" role="img" aria-label="Yachiraq, rotaciones que cuidan tu suelo y tu agua. Creado por NOVAQ">
+  <div class="sp-main">
   <svg viewBox="0 0 100 100" aria-hidden="true">
     <defs>
       <radialGradient id="spBg" cx="50%" cy="46%" r="72%"><stop offset="0" stop-color="#033F17"/><stop offset=".42" stop-color="#077A28"/><stop offset=".78" stop-color="#13B61D"/><stop offset="1" stop-color="#58E31B"/></radialGradient>
@@ -666,10 +675,14 @@ summary:hover{color:var(--green-2)}
     <g id="spLeaf"><path d="M50 55C49 40 38 28.5 13 29.5C14 46.5 24.5 59 44 62C48 62.6 50 60 50 55Z" fill="url(#spLf)"/><path d="M50 55C48.5 41.5 37.5 30.8 13.6 30.1" stroke="#D8FF3C" stroke-width="3.4" stroke-linecap="round" fill="none"/></g>
     <use href="#spLeaf" transform="matrix(-1 0 0 1 100 -1)"/>
   </svg>
+  <div class="sp-name">Yachiraq</div>
+  <div class="sp-tag">Rotaciones que cuidan tu suelo y tu agua</div>
+  </div>
+  <div class="sp-by"><img src="data:image/webp;base64,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" alt="" width="34" height="34"><span>Creado por<b>NOVAQ</b></span></div>
 </div>
 <div class="app" id="app">
   <header class="top">
-    <button class="brand" data-act="home" aria-label="Muyuy, mis parcelas"><span class="brand-mark" id="brandMark"></span><span class="brand-name">Muyuy</span></button>
+    <button class="brand" data-act="home" aria-label="Yachiraq, mis parcelas"><span class="brand-mark" id="brandMark"></span><span class="brand-name">Yachiraq</span></button>
     <div class="hdr-mid" id="hdrMid"></div>
     <div id="hdrRight"></div>
   </header>
@@ -843,7 +856,7 @@ const inWin=(m,w)=>w[0]<=w[1]?(m>=w[0]&&m<=w[1]):(m>=w[0]||m<=w[1]);
 
 /* ===== Climate: NASA POWER (live if online, reference values otherwise) ===== */
 const TOWN={lng:-74.2058,lat:-13.2730,alt:3527};
-/* Piloto: Muyuy solo tiene datos de cultivos, calendario y clima de referencia de Chiara. Zona aproximada: 12 km alrededor del pueblo (el distrito mide ~460 km²). */
+/* Piloto: Yachiraq solo tiene datos de cultivos, calendario y clima de referencia de Chiara. Zona aproximada: 12 km alrededor del pueblo (el distrito mide ~460 km²). */
 const PILOT_KM=12;
 const distKm=(lng,lat)=>Math.hypot((lng-TOWN.lng)*111.32*Math.cos(TOWN.lat*Math.PI/180),(lat-TOWN.lat)*110.574);
 const inPilot=poly=>{const [x,y]=poly.reduce((a,p)=>[a[0]+p[0]/poly.length,a[1]+p[1]/poly.length],[0,0]);return distKm(x,y)<=PILOT_KM;};
@@ -886,7 +899,7 @@ function climFor(alt){
 }
 
 /* ===== State & storage ===== */
-const KEY='muyuy.v6';
+const KEY='muyuy.v6'; // clave interna: se mantiene para no perder las parcelas guardadas
 const S={screen:'welcome',user:'',parcels:[],cur:null,tab:'hoy',contacts:[],done:{},skipPlan:false,
   draft:[],selV:null,editing:null,quiz:null,phone:'',smsOn:true,smsSent:[],gpsAt:null};
 function save(){try{localStorage.setItem(KEY,JSON.stringify({user:S.user,parcels:S.parcels,phone:S.phone,smsOn:S.smsOn,contacts:S.contacts,done:S.done}));}catch(e){}}
@@ -1207,16 +1220,16 @@ function alertsFor(p){
       what:`Pronóstico ajustado a los ${alt} de tu parcela.`,
       affects:st?`Tu ${crop} está ${st.name.toLowerCase()}${st.sensitive?': es la etapa más sensible al frío.':'.'}`:'No tienes cultivo ahora: protege tus almácigos y animales.',
       actions:acts,src:srcF,
-      sms:noAcc(`MUYUY: Helada el ${fmtDay(frostDate)} (${tmin}C) en ${p.name}.${st&&st.sensitive?' Tu '+crop+' esta sensible.':''} Cubre con paja y prende humo antes del amanecer.`),
-      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Helada el ${fmtDay(frostDate)} hasta ${tmin}C en las partes altas. Protejamos almacigos y chacras esa noche.`)});
+      sms:noAcc(`YACHIRAQ: Helada el ${fmtDay(frostDate)} (${tmin}C) en ${p.name}.${st&&st.sensitive?' Tu '+crop+' esta sensible.':''} Cubre con paja y prende humo antes del amanecer.`),
+      comm:noAcc(`YACHIRAQ: Aviso para la comunidad de Chiara. Helada el ${fmtDay(frostDate)} hasta ${tmin}C en las partes altas. Protejamos almacigos y chacras esa noche.`)});
   }
   if(fc?rainMM>=15:(NM>=9||NM<=2)){
     A.push({k:'rain',icon:'rain',sev:p.stats.slope>=15?'alta':'media',when:cap(fmtDay(rainDate)),title:`Lluvia fuerte: unos ${rainMM} mm`,
       what:'Un día de lluvia intensa.',affects:p.stats.slope>=12?`Tu parcela tiene ${p.stats.slope} % de pendiente: el agua puede llevarse la tierra.`:'Tu parcela es casi plana: revisa que el agua pueda salir.',
       actions:['Limpia zanjas y canales antes de ese día.',p.stats.slope>=12?'Abre o refuerza surcos en curva de nivel para frenar el agua.':'Abre una salida para que el agua no se empoce.','No dejes tierra recién removida sin cubrir.'],
       src:fc?'Pronóstico Open-Meteo + pendiente (SRTM)':'Pronóstico de ejemplo + pendiente (SRTM)',
-      sms:noAcc(`MUYUY: Lluvia fuerte el ${fmtDay(rainDate)} (${rainMM}mm) en ${p.name}. Limpia zanjas y canales para que no se lave la tierra.`),
-      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Lluvia fuerte el ${fmtDay(rainDate)}. Limpiemos juntos canales y zanjas comunales.`)});
+      sms:noAcc(`YACHIRAQ: Lluvia fuerte el ${fmtDay(rainDate)} (${rainMM}mm) en ${p.name}. Limpia zanjas y canales para que no se lave la tierra.`),
+      comm:noAcc(`YACHIRAQ: Aviso para la comunidad de Chiara. Lluvia fuerte el ${fmtDay(rainDate)}. Limpiemos juntos canales y zanjas comunales.`)});
   }
   if(ANOM.rainPct<=-20){
     A.push({k:'dry',icon:'drop',sev:'media',when:`Este mes (${MF[NM]})`,title:`Llovió ${-ANOM.rainPct} % menos de lo normal`,
@@ -1224,10 +1237,10 @@ function alertsFor(p){
       affects:st?(st.info.water>=2?`Tu ${crop} necesita agua constante: cuida la humedad.`:`Tu ${crop} aguanta bien la falta de agua.`):'Buen momento para planear una siembra que necesite poca agua.',
       actions:[p.water==='riego'?'Riega temprano en la mañana, cuando se pierde menos agua.':'Cubre el suelo con paja o rastrojo para guardar la humedad.','Para tu próxima siembra, prefiere cultivos de poca agua: quinua, tarwi o cebada.','Revisa la pestaña Siembra: ya ajustamos las opciones a este año más seco.'],
       src:'GPM IMERG (lluvia) + SMAP (humedad del suelo)',
-      sms:noAcc(`MUYUY: Este mes llovio ${-ANOM.rainPct}% menos de lo normal en ${p.name}. Cubre el suelo con paja para guardar humedad.`),
-      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Este mes llovio ${-ANOM.rainPct}% menos de lo normal. Cuidemos el agua de riego.`)});
+      sms:noAcc(`YACHIRAQ: Este mes llovio ${-ANOM.rainPct}% menos de lo normal en ${p.name}. Cubre el suelo con paja para guardar humedad.`),
+      comm:noAcc(`YACHIRAQ: Aviso para la comunidad de Chiara. Este mes llovio ${-ANOM.rainPct}% menos de lo normal. Cuidemos el agua de riego.`)});
   }
-  if(st&&st.idx>=3)A.push({k:'task',icon:'cal',sev:'baja',when:cap(fmtMY(st.harvestI)),title:`Cosecha de ${crop}`,what:'Se acerca el tiempo de cosecha.',affects:`Tu ${crop} está ${st.name.toLowerCase()}.`,actions:['Prepara sacos y espacio seco para guardar.','Si se anuncia helada, adelanta la cosecha.'],src:'Calendario de tu cultivo',sms:noAcc(`MUYUY: Se acerca la cosecha de ${crop} en ${p.name}.`),comm:''});
+  if(st&&st.idx>=3)A.push({k:'task',icon:'cal',sev:'baja',when:cap(fmtMY(st.harvestI)),title:`Cosecha de ${crop}`,what:'Se acerca el tiempo de cosecha.',affects:`Tu ${crop} está ${st.name.toLowerCase()}.`,actions:['Prepara sacos y espacio seco para guardar.','Si se anuncia helada, adelanta la cosecha.'],src:'Calendario de tu cultivo',sms:noAcc(`YACHIRAQ: Se acerca la cosecha de ${crop} en ${p.name}.`),comm:''});
   return A;
 }
 const SEV={alta:{l:'Alerta alta',c:'#B42318',bg:'#FEE4E2'},media:{l:'Atención',c:'#8A5A00',bg:'#FFF1CC'},baja:{l:'Aviso',c:'#1F7A4D',bg:'#E1F1E7'}};
@@ -1413,7 +1426,7 @@ const V={
 welcome(){return {html:`
   <span class="tag ok" style="margin-bottom:10px">${ic('pin',13)} Piloto en Chiara, Ayacucho</span>
   <h1 class="title">Decide qué sembrar los próximos 3 años, cuidando tu suelo y tu agua</h1>
-  <p class="lead">Muyuy compara rotaciones para cada parcela con datos de satélites de la NASA, y te avisa antes de una helada o lluvia fuerte. <b>Por ahora funciona solo para parcelas del distrito de Chiara.</b></p>
+  <p class="lead">Yachiraq compara rotaciones para cada parcela con datos de satélites de la NASA, y te avisa antes de una helada o lluvia fuerte. <b>Por ahora funciona solo para parcelas del distrito de Chiara.</b></p>
   <div class="how3"><div><span class="hi">${ic('pin',22)}</span>Marca tus parcelas</div><div><span class="hi">${ic('leaf',22)}</span>Compara 3 rotaciones</div><div><span class="hi">${ic('bell',22)}</span>Te avisamos de heladas</div></div>
   <button class="option" data-act="ciencia"><span class="oi">${ic('sat',22)}</span><div><b>Cómo funciona</b><span>Datos de la NASA y cómo decidimos</span></div></button>
   <div class="card"><label for="uname" class="ql">¿Cómo te llamas?</label><span class="qh">Para saludarte. No necesitas cuenta.</span><input id="uname" class="input" placeholder="Ej. Rosa" value="${S.user}" maxlength="24" autocomplete="given-name"></div>
@@ -1467,7 +1480,7 @@ draw(){const n=S.draft.length;return {html:`${flowBack()}
   <p class="eyebrow">${S.editing?'Editar parcela':'Nueva parcela, paso 1 de 2'}</p><h1 class="title">${S.editing?'Ajusta la forma':'Dibuja tu parcela'}</h1>
   <div class="card"><div class="kv"><div><div class="k">Puntos</div><div class="v" id="drawN">${n}</div></div><div><div class="k">Tamaño</div><div class="v" id="drawArea">${n>2?fmtHa(areaHa(S.draft)):'—'}</div></div></div></div>
   ${S.selV!=null?`<div class="card" style="display:flex;align-items:center;gap:10px;justify-content:space-between"><span style="font-weight:700;font-size:15px">Punto ${S.selV+1} seleccionado</span><button class="btn btn-danger" data-act="delV" ${n<=3?'disabled':''} style="min-height:44px">${icm('trash',17)} Quitar punto</button></div>`:''}
-  ${n>2&&!inPilot(S.draft)?`<div class="review"><b>Esta parcela está fuera de Chiara.</b> Muyuy solo tiene datos de cultivos y clima de Chiara, así que no podemos recomendarte una rotación aquí. Dibuja tu parcela dentro de la zona del piloto (la línea blanca del mapa).</div>`:''}
+  ${n>2&&!inPilot(S.draft)?`<div class="review"><b>Esta parcela está fuera de Chiara.</b> Yachiraq solo tiene datos de cultivos y clima de Chiara, así que no podemos recomendarte una rotación aquí. Dibuja tu parcela dentro de la zona del piloto (la línea blanca del mapa).</div>`:''}
   <p class="small">Acerca el mapa con dos dedos o la rueda del mouse. Toca un punto para seleccionarlo.</p>`,
   cta:`<div class="btn-row"><button class="btn btn-ghost" data-act="undo" ${n?'':'disabled'}>Deshacer</button><button class="btn btn-ghost" data-act="clearDraw" ${n?'':'disabled'}>Borrar todo</button></div>${primary(S.editing?'Guardar forma':'Listo, siguiente','finishDraw',n<3||!inPilot(S.draft))}`};},
 
@@ -1508,12 +1521,12 @@ ciencia(){
   ];
   return {html:`<button class="back" data-act="cienciaBack">${icm('back',16)} Volver</button>
   <p class="eyebrow">Cómo funciona</p><h1 class="title">De los satélites a tu parcela</h1>
-  <p class="lead">Muyuy junta datos de satélites de la NASA con lo que tú nos cuentas de tu parcela, y compara rotaciones con reglas claras que puedes revisar.</p>
+  <p class="lead">Yachiraq junta datos de satélites de la NASA con lo que tú nos cuentas de tu parcela, y compara rotaciones con reglas claras que puedes revisar.</p>
   <div class="card"><h3>Datos que usamos</h3><p class="sub">Tamaño del cuadro que mide cada satélite</p>
     <table class="dtab"><tbody>${rows.map(r=>`<tr><td>${r[0]}<small>${r[1]}, ${r[3]}</small>${r[5]}</td><td>${r[2]}.<small>Para: ${r[4].toLowerCase()}.</small></td></tr>`).join('')}</tbody></table></div>
   <div class="card"><h3>Datos de distinto tamaño, una sola escala</h3>
     <div class="scale">${[['SRTM','30 m',6],['MODIS','250 m',14],['SMAP','9 km',30],['POWER','50 km',54]].map(([n,r,w])=>`<div><i style="width:${w}px;height:${w}px"></i>${n}<br>${r}</div>`).join('')}</div>
-    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Cada satélite mide en cuadros de distinto tamaño. Muyuy lleva todo a la misma escala: <b>un valor por parcela y por mes</b>. La altura y la pendiente se miden en 50 puntos dentro de tu parcela. El clima de NASA POWER cubre una zona grande, por eso lo ajustamos a la altura exacta de tu parcela: unos 0,65 °C más frío por cada 100 m.</p></div>
+    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Cada satélite mide en cuadros de distinto tamaño. Yachiraq lleva todo a la misma escala: <b>un valor por parcela y por mes</b>. La altura y la pendiente se miden en 50 puntos dentro de tu parcela. El clima de NASA POWER cubre una zona grande, por eso lo ajustamos a la altura exacta de tu parcela: unos 0,65 °C más frío por cada 100 m.</p></div>
   <div class="card"><h3>Satélite y estación en tierra</h3>
     <p style="font-size:14.5px;line-height:1.5;margin:0">Una estación mide el punto exacto donde está, pero en la sierra hay pocas y lejos. El satélite mide todos los lugares, pero da el promedio de un cuadro y a veces lo tapan las nubes. Lo mejor es juntarlos: el satélite para ver el patrón y la estación del SENAMHI o lo que observa el agricultor para confirmarlo.</p>
     ${CLIM.bias?`<div class="tip">${ic('thermo',20)}<span>Ejemplo real: el cuadro de NASA POWER sobre Chiara está a ${fmtM(CLIM.bias.elev)} y marca las noches ${Math.abs(CLIM.bias.min)} °C más ${CLIM.bias.min>0?'frías':'cálidas'} que la referencia local. Sin corregir, la app diría que hiela casi todas las noches del año. Corregimos ese sesgo y conservamos el patrón de cada mes.</span></div>`:''}
@@ -1528,10 +1541,10 @@ ciencia(){
     <details><summary>¿Por qué reglas y no inteligencia artificial?</summary><div class="body">No hay todavía datos de cosechas de Chiara para entrenar un modelo. Un modelo de IA entrenado con otras regiones podría equivocarse aquí sin que nadie lo note. Las reglas se pueden leer, discutir y corregir con los técnicos y los agricultores. Cuando haya datos de campo (rendimientos, análisis de suelo), se pueden usar para calibrar los puntos o entrenar un modelo, comparándolo siempre con estas reglas.</div></details>
     <details><summary>¿Qué tan seguros estamos?</summary><div class="body">Cada rotación muestra su nivel de confianza según cuántas fuentes llegaron en vivo. Los datos de cultivos (cuánto tardan, cuánta agua piden) son referencias generales de la FAO y el INIA, y deben validarse con variedades locales. Lo que no sabemos, como el precio de venta o la semilla disponible, lo decimos en cada rotación.</div></details></div>
   <div class="card"><h3>¿Dónde funciona?</h3>
-    <p style="font-size:14.5px;line-height:1.5;margin:0">Muyuy es un <b>piloto en el distrito de Chiara</b> (Ayacucho), entre 3,000 y 4,300 m: unos ${PILOT_KM} km alrededor del pueblo, marcados en el mapa. Fuera de esa zona no damos recomendaciones.</p>
+    <p style="font-size:14.5px;line-height:1.5;margin:0">Yachiraq es un <b>piloto en el distrito de Chiara</b> (Ayacucho), entre 3,000 y 4,300 m: unos ${PILOT_KM} km alrededor del pueblo, marcados en el mapa. Fuera de esa zona no damos recomendaciones.</p>
     <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Los datos de la NASA cubren todo el mundo. Lo que es de Chiara es:</p>
     <ul style="font-size:14.5px;line-height:1.5;margin:6px 0 0;padding-left:20px"><li>los cultivos y sus épocas de siembra (calendario de lluvias de la sierra sur);</li><li>los pisos de altura quechua, suni y puna;</li><li>la referencia local de temperatura para corregir NASA POWER;</li><li>el cálculo de lluvia y humedad del suelo en Earth Engine.</li></ul>
-    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Para llevar Muyuy a otra zona hay que cambiar esas 4 cosas, de preferencia con técnicos y agricultores del lugar.</p></div>
+    <p style="font-size:14.5px;line-height:1.5;margin:10px 0 0">Para llevar Yachiraq a otra zona hay que cambiar esas 4 cosas, de preferencia con técnicos y agricultores del lugar.</p></div>
   <div class="card"><h3>Palabras que usamos</h3><dl class="gloss">
     <dt>Rotación</dt><dd>Cambiar de cultivo en la misma parcela año tras año. Corta el ciclo de las plagas y cuida el suelo.</dd>
     <dt>Leguminosa</dt><dd>Plantas como la haba, el tarwi o la vicia. Toman nitrógeno del aire y lo dejan en el suelo como abono natural.</dd>
@@ -1540,7 +1553,7 @@ ciencia(){
     <dt>Evapotranspiración</dt><dd>El agua que sale del suelo y de las plantas hacia el aire. Cuando hace calor y viento, el cultivo pide más agua.</dd>
     <dt>Erosión</dt><dd>Cuando la lluvia arrastra la tierra buena. Pasa más en laderas y con el suelo descubierto.</dd>
     <dt>Helada</dt><dd>Noche en que la temperatura baja de 0 °C y puede quemar las hojas y las flores.</dd></dl></div>
-  <div class="review"><b>Muyuy no reemplaza tu experiencia.</b> Tú conoces tu tierra y tu comunidad. Usa estas ideas para conversar con tu familia, tu técnico o el INIA antes de decidir.</div>`,cta:''};
+  <div class="review"><b>Yachiraq no reemplaza tu experiencia.</b> Tú conoces tu tierra y tu comunidad. Usa estas ideas para conversar con tu familia, tu técnico o el INIA antes de decidir.</div>`,cta:''};
 },
 
 parcel(){
@@ -1574,7 +1587,7 @@ parcel(){
     return {html:head+`
       ${A.length?A.map((a,i)=>alertCard(a,i,true)).join(''):'<p class="lead">Sin alertas esta semana.</p>'}
       <p class="small" style="margin:-2px 0 14px">${fcFor(p)?'Pronóstico: Open-Meteo, actualizado hoy.':'Sin conexión al pronóstico: se muestran valores de ejemplo.'} ${ANOM.live?`Anomalía: GPM IMERG y SMAP (${ANOM.period}).`:'Anomalía de lluvia y suelo: valores de ejemplo hasta correr el script de Earth Engine.'}</p>
-      ${smsBlock(A[0]?A[0].sms:noAcc(`MUYUY: Sin alertas esta semana en ${p.name}.`))}`,cta:''};
+      ${smsBlock(A[0]?A[0].sms:noAcc(`YACHIRAQ: Sin alertas esta semana en ${p.name}.`))}`,cta:''};
   }
 
   if(S.tab==='siembra'){
@@ -1627,7 +1640,7 @@ parcel(){
       <div class="lg"><span><i style="background:#D9783B"></i>Temp. máxima</span><span><i style="background:#5144C9"></i>Temp. mínima</span><span><i style="background:#8DBEDC"></i>Lluvia</span><span style="color:#1662C4">% Humedad</span></div>
       <div class="facts"><div class="fact"><div class="k">Noches de helada</div><div class="v">${fNights} al año</div></div><div class="fact"><div class="k">Más frío</div><div class="v">${minT.toFixed(1)} °C</div></div><div class="fact"><div class="k">Lluvia</div><div class="v">${rainY} mm</div></div></div>
       <details><summary>¿De dónde salen estos datos?</summary><div class="body"><span class="tag sat">${ic('sat',13)} NASA POWER${CLIM.live?', en vivo':', valores de referencia'}</span><br>Temperatura, lluvia y humedad relativa son el promedio de muchos años de NASA POWER. Como su medición cubre una zona grande, ajustamos la temperatura a la altura exacta de tu parcela: cada 100 m más arriba, unos 0,65 °C más frío.${CLIM.bias?` También corregimos su sesgo: el cuadro de POWER (a ${fmtM(CLIM.bias.elev)}) marca las noches ${Math.abs(CLIM.bias.min)} °C más ${CLIM.bias.min>0?'frías':'cálidas'} que la referencia local, así que ajustamos el promedio y conservamos el patrón de cada mes.`:''}</div></details></div>
-    <button class="option" data-act="ciencia"><span class="oi">${ic('sat',22)}</span><div><b>Cómo funciona Muyuy</b><span>Qué datos de la NASA usamos y cómo decidimos</span></div></button>
+    <button class="option" data-act="ciencia"><span class="oi">${ic('sat',22)}</span><div><b>Cómo funciona Yachiraq</b><span>Qué datos de la NASA usamos y cómo decidimos</span></div></button>
     <div class="btn-row" style="margin-bottom:6px"><button class="btn btn-ghost" data-act="editShape">${icm('edit',18)} Editar forma</button><button class="btn btn-ghost" data-act="editQuiz">${icm('list',18)} Editar respuestas</button></div>
     <button class="link-btn" data-act="delP" style="color:#B42318">${S.confirmDel===p.id?'Toca otra vez para eliminar esta parcela':'Eliminar parcela'}</button>`,cta:''};
 }
@@ -1635,7 +1648,7 @@ parcel(){
 function smsBlock(text){
   const inbox=S.smsSent.slice(-3);
   return `<h2 class="sec" id="smsSec">Alertas por WhatsApp</h2>
-    <div class="phone" id="phone"><div class="scr"><div class="bar"><span>${String(NOW.getHours()).padStart(2,'0')}:${String(NOW.getMinutes()).padStart(2,'0')}</span><span>●●● ▮</span></div><div class="who"><span>${icm('sprout',18)}</span>MUYUY</div>
+    <div class="phone" id="phone"><div class="scr"><div class="bar"><span>${String(NOW.getHours()).padStart(2,'0')}:${String(NOW.getMinutes()).padStart(2,'0')}</span><span>●●● ▮</span></div><div class="who"><span>${icm('sprout',18)}</span>YACHIRAQ</div>
       ${inbox.length?inbox.map((m,i)=>`<div class="sms ${i===inbox.length-1&&S.justSent?'new':''}">${m.t}<small>${m.to}</small></div>`).join(''):`<div class="sms" style="opacity:.6">${text}<small>Vista previa</small></div>`}</div></div>
     <div class="card"><div class="toggle-row">Recibir alertas por WhatsApp<label class="switch"><input type="checkbox" data-sw="sms" ${S.smsOn?'checked':''}><span></span></label></div>
       <label class="ql" for="phoneIn" style="font-size:15px;margin:6px 0 8px">Mi número</label>
@@ -1728,7 +1741,7 @@ $('#app').addEventListener('click',async e=>{
       toast('Buscando tu ubicación…');
       navigator.geolocation.getCurrentPosition(pos=>{
         const ll=[pos.coords.longitude,pos.coords.latitude],d=Math.hypot((ll[0]-TOWN.lng)*M_LNG(TOWN.lat),(ll[1]-TOWN.lat)*M_LAT);
-        if(d>PILOT_KM*1000){toast('Muyuy por ahora funciona solo en Chiara: te llevamos al centro del distrito.');S.gpsAt=[TOWN.lng,TOWN.lat];}else S.gpsAt=ll;
+        if(d>PILOT_KM*1000){toast('Yachiraq por ahora funciona solo en Chiara: te llevamos al centro del distrito.');S.gpsAt=[TOWN.lng,TOWN.lat];}else S.gpsAt=ll;
         if(mapReady){if(meMarker)meMarker.remove();const el=document.createElement('div');el.className='me-dot';meMarker=new maplibregl.Marker({element:el}).setLngLat(S.gpsAt).addTo(map);
           map.flyTo({center:S.gpsAt,zoom:17.3,pitch:45,bearing:0,speed:1.1,curve:1.6,essential:true});}
         S.draft=[];go('draw');
@@ -1771,8 +1784,8 @@ $('#app').addEventListener('click',async e=>{
       S.contacts.push({name:n,phone:ph,role:r});save();toast(`${n} recibirá las alertas`);keepScroll(render);break;}
     case 'delContact':{const c=S.contacts.splice(+b.dataset.i,1)[0];save();toast(`${c.name} ya no recibirá alertas`);keepScroll(render);break;}
     case 'share':{const p=curP(),np=nextPlan(p),st=stageOf(p);
-      const t=`Plan Muyuy, ${p.name} (${fmtHa(p.stats.area)}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}). Ahora: ${st?st.key+' ('+st.name.toLowerCase()+')':'descanso'}. Próxima siembra: ${np.next?np.next.c+' desde '+fmtMY(np.next.sow):'por definir'}.${p.rot?(r=>r?` Rotación elegida: ${r.name} (${r.seq.join(', ')}).`:'')(rotStrategies(p).find(x=>x.k===p.rot)):''}`;
-      if(navigator.share)navigator.share({title:'Mi plan Muyuy',text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Plan copiado. Pégalo en WhatsApp para tu técnico.'),()=>toast('Plan listo para enviar.'));else toast('Plan listo para enviar.');break;}
+      const t=`Plan Yachiraq, ${p.name} (${fmtHa(p.stats.area)}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}). Ahora: ${st?st.key+' ('+st.name.toLowerCase()+')':'descanso'}. Próxima siembra: ${np.next?np.next.c+' desde '+fmtMY(np.next.sow):'por definir'}.${p.rot?(r=>r?` Rotación elegida: ${r.name} (${r.seq.join(', ')}).`:'')(rotStrategies(p).find(x=>x.k===p.rot)):''}`;
+      if(navigator.share)navigator.share({title:'Mi plan Yachiraq',text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Plan copiado. Pégalo en WhatsApp para tu técnico.'),()=>toast('Plan listo para enviar.'));else toast('Plan listo para enviar.');break;}
   }
 });
 $('#app').addEventListener('input',e=>{const t=e.target;
@@ -1827,10 +1840,10 @@ function rerenderIfClimate(){if(S.screen==='parcel'||S.screen==='parcels'||S.scr
 function logoSVG(){return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="bmBg" cx="50%" cy="46%" r="72%"><stop offset="0" stop-color="#033F17"/><stop offset=".42" stop-color="#077A28"/><stop offset=".78" stop-color="#13B61D"/><stop offset="1" stop-color="#58E31B"/></radialGradient><linearGradient id="bmLf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D2FF2F"/><stop offset=".5" stop-color="#63DB1C"/><stop offset="1" stop-color="#14A21C"/></linearGradient></defs><rect width="100" height="100" fill="url(#bmBg)"/><path d="M50 80V53" stroke="#9BEF26" stroke-width="6.5" stroke-linecap="round"/><path id="bmLeaf" d="M50 55C49 40 38 28.5 13 29.5C14 46.5 24.5 59 44 62C48 62.6 50 60 50 55Z" fill="url(#bmLf)"/><use href="#bmLeaf" transform="matrix(-1 0 0 1 100 -1)"/></svg>`;}
 (function splash(){
   const sp=$('#splash');if(!sp)return;
-  let seen=false;try{seen=sessionStorage.getItem('muyuy.splash')==='1';sessionStorage.setItem('muyuy.splash','1');}catch(e){}
+  let seen=false;try{seen=sessionStorage.getItem('yachiraq.splash')==='1';sessionStorage.setItem('yachiraq.splash','1');}catch(e){}
   if(seen&&!/[?&]splash/.test(location.search)){sp.remove();return;}
   let gone=false;const out=()=>{if(gone)return;gone=true;sp.classList.add('out');setTimeout(()=>sp.remove(),800);};
-  sp.addEventListener('click',out);setTimeout(out,1500);
+  sp.addEventListener('click',out);setTimeout(out,2300);
 })();
 
 /* ===== Init ===== */

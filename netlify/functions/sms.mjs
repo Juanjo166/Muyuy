@@ -1,4 +1,4 @@
-// Muyuy: envía una alerta por WhatsApp (Green-API) o, si falla, por SMS (Twilio).
+// Yachiraq: envía una alerta por WhatsApp (Green-API) o, si falla, por SMS (Twilio).
 // La app llama: POST /.netlify/functions/sms  con  {"to":"+51987654321","body":"texto"}
 //
 // Protección (el endpoint es público, así que no puede depender de una clave en el frontend):

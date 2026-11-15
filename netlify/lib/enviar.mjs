@@ -1,4 +1,4 @@
-// Muyuy: envío de alertas. Canal principal: WhatsApp con Green-API (instancia vinculada por QR). Respaldo: SMS con Twilio.
+// Yachiraq: envío de alertas. Canal principal: WhatsApp con Green-API (instancia vinculada por QR). Respaldo: SMS con Twilio.
 //
 // Variables de entorno en Netlify:
 //   GREEN_ID_INSTANCE, GREEN_API_TOKEN   credenciales de la instancia de Green-API

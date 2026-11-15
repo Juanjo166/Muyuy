@@ -1,4 +1,4 @@
-// Muyuy: anomalía de lluvia (GPM IMERG) y humedad del suelo (SMAP) en Chiara, Ayacucho.
+// Yachiraq: anomalía de lluvia (GPM IMERG) y humedad del suelo (SMAP) en Chiara, Ayacucho.
 // Cómo usarlo: abre https://code.earthengine.google.com, pega este script y presiona "Run".
 // En la consola (derecha) aparece una línea "const ANOM_CONFIG=..." para pegar en index.html.
 
