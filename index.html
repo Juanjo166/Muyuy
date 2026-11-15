@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F7A4D">
+<title>Muyuy, Qué sembrar en cada parcela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#1E2A22; --muted:#59615A; --cream:#F6F2E9; --line:#E4DDCF;
+  --green:#2F5D3A; --green-2:#3E7A4C; --green-soft:#E3EEDC;
+  --terra:#C2522A; --terra-soft:#F8E3D8; --gold-soft:#FBEFD2; --gold-ink:#6B4A0E;
+  --sky:#2F6F99; --sky-soft:#E1EEF5; --violet:#4B3E9C; --violet-soft:#ECE9F7;
+  --quechua:#6FA35A; --suni:#C89B4E; --puna:#8C8FA8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--cream);-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* Header */
+header.top{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#fff;border-bottom:1px solid var(--line);z-index:6;min-height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-family:Fraunces,Georgia,serif;font-size:22px;font-weight:600;color:var(--green);white-space:nowrap;background:none;border:0;cursor:pointer;padding:0}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--green);color:#fff;display:grid;place-items:center}
+.hdr-mid{flex:1;display:flex;justify-content:center;min-width:0}
+.flowsteps{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;color:var(--muted)}
+.flowsteps .s{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.flowsteps .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#EFEAE0;font-size:12px;font-weight:700}
+.flowsteps .s.on{background:var(--green);color:#fff}.flowsteps .s.on .n{background:#fff;color:var(--green)}
+.flowsteps .s.done .n{background:var(--green-soft);color:var(--green)}
+.flowsteps .sep{width:16px;height:2px;background:var(--line)}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;white-space:nowrap}
+.user-chip .av{width:34px;height:34px;border-radius:50%;background:var(--terra-soft);color:#8A3418;display:grid;place-items:center;font-weight:700}
+.sms-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--green);background:var(--green-soft);padding:6px 10px;border-radius:999px}
+
+/* Layout */
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 460px;min-height:0}
+.stage{position:relative;min-height:0;overflow:hidden;background:#C9D9DF}
+#map{position:absolute;inset:0}
+.map-fallback{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;background:linear-gradient(180deg,#D3E5EC,#EDE7D9);color:var(--muted);font-size:14px}
+.map-fallback b{color:var(--ink);font-size:16px}
+.stage.nomap .map-fallback{display:flex}
+.ov{position:absolute;z-index:3}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(30,42,34,.12);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pill.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ov-top{top:14px;left:50%;transform:translateX(-50%);max-width:calc(100% - 120px);transition:opacity .3s}
+.ov-bl{left:14px;bottom:30px;transition:opacity .3s}
+.ov-draw{left:50%;bottom:30px;transform:translateX(-50%);display:flex;gap:8px;transition:opacity .3s}
+.hidden{opacity:0!important;pointer-events:none!important}
+.legend{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12px;box-shadow:0 4px 16px rgba(30,42,34,.10);min-width:170px}
+.legend b{font-size:13px;display:block;margin-bottom:6px}
+.legend .row{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:4px}
+.legend .row i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend .row.dim{opacity:.4}
+.town-marker{background:var(--ink);color:#fff;font:700 12px Inter,system-ui,sans-serif;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);white-space:nowrap}
+.parcel-marker{display:flex;align-items:center;gap:6px;background:#fff;color:var(--ink);font:700 13px Inter,system-ui,sans-serif;padding:5px 10px 5px 5px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.3);white-space:nowrap;cursor:pointer}
+.parcel-marker .pi{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px}
+.parcel-marker.sel{background:var(--terra);color:#fff}
+.me-dot{width:18px;height:18px;border-radius:50%;background:#2F7BD9;border:3px solid #fff;box-shadow:0 0 0 0 rgba(47,123,217,.6);animation:ping 1.6s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(47,123,217,.6)}100%{box-shadow:0 0 0 22px rgba(47,123,217,0)}}
+.vtx{width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--terra);box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:grab;touch-action:none}
+.vtx.sel{background:var(--terra);border-color:#fff;transform:scale(1.25)}
+.mid{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.85);border:2px dashed var(--terra);color:var(--terra);display:grid;place-items:center;font:700 13px Inter,sans-serif;cursor:pointer;line-height:1}
+.maplibregl-ctrl-group{border-radius:12px!important;overflow:hidden}
+.maplibregl-ctrl-group button{width:36px!important;height:36px!important}
+
+/* Panel */
+.panel{position:relative;overflow-y:auto;background:var(--cream);border-left:1px solid var(--line);display:flex;flex-direction:column;scroll-behavior:smooth}
+.panel-inner{padding:22px 22px 8px;flex:1;animation:fadeUp .35s ease}
+.cta-bar{position:sticky;bottom:0;padding:14px 22px 20px;background:linear-gradient(rgba(246,242,233,0),var(--cream) 32%);display:flex;flex-direction:column;gap:8px;z-index:2}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.guide{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.bubble{background:#fff;border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 12px 10px 14px;font-size:15px;line-height:1.45;flex:1;display:flex;gap:10px;align-items:flex-start}
+.bubble .txt{flex:1}
+.listen{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#F6F2E9;display:grid;place-items:center;cursor:pointer;color:var(--green)}
+.listen.on{background:var(--green);color:#fff}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--terra)}
+h1.title{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:29px;line-height:1.1;margin:6px 0 8px;letter-spacing:-.01em}
+h2.sec{font-size:16px;font-weight:700;margin:20px 0 10px}
+.lead{color:var(--muted);font-size:15px;line-height:1.55;margin:0 0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:15px;font-weight:700}
+.card .sub{margin:-6px 0 12px;font-size:13px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.warn{background:var(--gold-soft);color:var(--gold-ink)}
+.tag.bad{background:var(--terra-soft);color:#8A3418}
+.tag.sat{background:var(--sky-soft);color:#1F5576}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:14px;border:0;font-weight:600;font-size:15px;cursor:pointer;transition:background .2s,transform .1s;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{width:100%;background:var(--green);color:#fff;min-height:56px;font-size:17px}
+.btn-primary:hover{background:#264D30}
+.btn-primary:disabled{background:#D6CFBF;color:#6E685B;cursor:not-allowed}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:#CFC6B4}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:disabled{background:#8B918C;cursor:not-allowed}
+.btn-danger{background:#fff;border:1px solid #E9C3B3;color:#8A3418}
+.btn-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.link-btn{background:none;border:0;padding:6px 0;color:var(--green);font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;padding:4px 0;margin-bottom:8px}
+.option{width:100%;display:flex;align-items:center;gap:14px;text-align:left;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:#fff;cursor:pointer;margin-bottom:10px;transition:border-color .15s}
+.option:hover{border-color:var(--green)}
+.option .oi{width:46px;height:46px;border-radius:12px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.option b{display:block;font-size:15px}
+.option span{font-size:13px;color:var(--muted)}
+.input{min-height:50px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 14px;font-size:16px;width:100%}
+.input:focus{outline:2px solid var(--green);outline-offset:1px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;background:#EEE8DB;padding:4px;border-radius:14px}
+.seg button{min-height:46px;border:0;border-radius:10px;background:transparent;font-weight:600;cursor:pointer;font-size:14px;color:var(--muted);padding:0 6px;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button[aria-pressed="true"]{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);color:var(--green)}
+.q{margin-bottom:18px}
+.ql{display:block;font-size:15px;font-weight:700;margin-bottom:4px}
+.qh{display:block;font-size:13px;color:var(--muted);margin-bottom:10px}
+.crops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.crop{position:relative;min-height:96px;border-radius:16px;border:1.5px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;padding:8px 4px;text-align:center;line-height:1.15}
+.crop[aria-pressed="true"]{border-color:var(--green);background:var(--green-soft);box-shadow:inset 0 0 0 1px var(--green)}
+.crop .chk{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;display:none;place-items:center}
+.crop[aria-pressed="true"] .chk{display:grid}
+.ill{display:inline-grid;place-items:center;border-radius:50%;flex:none;overflow:hidden}
+
+/* Parcels carousel */
+.carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 10px;margin:0 -22px;padding-left:22px;padding-right:22px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.pcard{flex:none;width:86%;scroll-snap-align:center;background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;cursor:pointer;text-align:left;padding:0;transition:box-shadow .2s,border-color .2s}
+.pcard.cur{border-color:var(--green);box-shadow:0 8px 24px rgba(47,93,58,.15)}
+.pcard .band{height:84px;position:relative;display:flex;align-items:flex-end;gap:6px;padding:10px 14px}
+.pcard .band .ill{box-shadow:0 2px 8px rgba(0,0,0,.15);border:2px solid #fff}
+.pcard .piso{position:absolute;top:10px;right:12px;background:rgba(255,255,255,.92);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.pcard .bd{padding:12px 14px 14px}
+.pcard .nm{font-family:Fraunces,Georgia,serif;font-size:21px;font-weight:600;line-height:1.15}
+.pcard .meta{font-size:13px;color:var(--muted);margin:2px 0 10px}
+.pcard .al{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;padding:8px 10px;border-radius:12px}
+.dots{display:flex;justify-content:center;gap:6px;margin:2px 0 12px}
+.dots i{width:7px;height:7px;border-radius:50%;background:#D8D0BF;transition:width .2s,background .2s}
+.dots i.on{width:20px;border-radius:4px;background:var(--green)}
+.add-card{flex:none;width:60%;scroll-snap-align:center;border:2px dashed #CFC6B4;border-radius:22px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--green);font-weight:700;cursor:pointer;min-height:200px}
+.add-card .plus{width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center}
+.empty{text-align:center;padding:10px 4px 6px}
+.empty .art{margin:6px auto 14px;width:150px}
+
+/* Parcel detail */
+.ptabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#EEE8DB;padding:4px;border-radius:14px;margin:4px 0 16px;position:sticky;top:-22px;z-index:3}
+.ptabs button{min-height:44px;border:0;border-radius:10px;background:transparent;font-weight:700;font-size:14px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
+.ptabs button[aria-pressed="true"]{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.phead{display:flex;align-items:center;gap:10px}
+.phead .nav{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.phead .nav:disabled{opacity:.35;cursor:default}
+.phead .t{flex:1;min-width:0}
+.alt-card{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:stretch}
+.alt-bar{position:relative;border-radius:14px;overflow:hidden;display:grid;grid-template-rows:1fr 1fr 1.2fr;min-height:170px}
+.alt-bar div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);letter-spacing:.02em}
+.alt-bar .me{position:absolute;left:-2px;right:-2px;height:4px;background:#fff;box-shadow:0 0 0 2px var(--terra);border-radius:2px}
+.alt-bar .me::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;background:var(--terra);border:3px solid #fff;border-radius:50%;transform:translate(-50%,-50%)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kv .k{font-size:12px;color:var(--muted);font-weight:600}
+.kv .v{font-size:19px;font-weight:700;margin-top:2px}
+.now-crops{display:flex;flex-direction:column;gap:8px}
+.ncrop{display:flex;align-items:center;gap:12px}
+.ncrop .nm{flex:1;font-weight:700;font-size:15px}
+.ncrop .nm small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.lvl{display:inline-flex;align-items:center;gap:2px;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.lvl svg{flex:none}
+.lvl3{background:var(--green-soft);color:var(--green)}.lvl2{background:var(--gold-soft);color:var(--gold-ink)}.lvl1{background:var(--terra-soft);color:#8A3418}
+.chart{width:100%;height:auto;display:block}
+.lg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;font-weight:600;color:var(--muted);margin-top:8px}
+.lg span{display:flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:3px}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.fact{background:#F6F2E9;border-radius:12px;padding:10px}
+.fact .k{font-size:11px;font-weight:700;color:var(--muted)}
+.fact .v{font-size:16px;font-weight:700;margin-top:2px}
+details{border-top:1px solid var(--line);padding-top:6px;margin-top:10px}
+summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--green);list-style:none;display:flex;align-items:center;gap:8px;min-height:36px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .2s;margin:0 2px}
+details[open] summary::before{transform:rotate(45deg)}
+details .body{padding-top:4px;font-size:14px;line-height:1.55;color:#3A443C}
+
+/* Recommendation */
+.reco{border:2px solid var(--green);padding:18px}
+.reco .rh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.reco-name{font-family:Fraunces,Georgia,serif;font-size:25px;font-weight:600;line-height:1.1;margin:6px 0 2px}
+.years{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+.yr{border-radius:16px;padding:10px 8px 12px;text-align:center;position:relative;transition:transform .3s,box-shadow .3s}
+.yr.now{transform:translateY(-3px);box-shadow:0 0 0 2px var(--green),0 8px 18px rgba(47,93,58,.18)}
+.yr .yl{font-size:11px;font-weight:700;opacity:.8;margin-bottom:6px}
+.yr .yn{font-size:14px;font-weight:700;margin-top:6px;line-height:1.15}
+.yr .yw{font-size:12px;line-height:1.35;margin-top:6px;color:#3A443C}
+.reasons{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.reasons li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.reasons .ri{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.phen{display:grid;grid-template-columns:62px repeat(12,minmax(0,1fr));gap:3px;align-items:center}
+.phen .mh{text-align:center;font-size:10px;font-weight:700;color:var(--muted)}
+.phen .rl{font-size:11px;font-weight:700;color:var(--muted);line-height:1.1}
+.phen .c{height:24px;border-radius:5px;position:relative}
+.phen .c b{position:absolute;inset:0;display:grid;place-items:center;color:#fff}
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--green-soft);color:var(--green);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;font-weight:600;margin-top:12px}
+.tip.warn{background:var(--gold-soft);color:var(--gold-ink)}
+.review{background:var(--terra-soft);border-radius:14px;padding:12px 14px;color:#5C2810;font-size:14px;line-height:1.5;margin-bottom:12px}
+
+/* Alerts + SMS */
+.alert{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid var(--line);background:#fff;text-align:left;width:100%}
+.alert .ai{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
+.alert b{display:block;font-size:15px;margin-bottom:2px}
+.alert .tx{font-size:13px;color:var(--muted);line-height:1.45;display:block}
+.alert .when{font-size:11px;font-weight:700;color:var(--terra);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;display:block}
+.alert.frost .ai{background:var(--violet-soft);color:var(--violet)}
+.alert.rain .ai{background:var(--sky-soft);color:var(--sky)}
+.alert.dry .ai{background:var(--gold-soft);color:var(--gold-ink)}
+.alert.task .ai{background:var(--green-soft);color:var(--green)}
+.phone{width:250px;margin:4px auto 14px;border-radius:34px;background:#1b1f1c;padding:12px 10px 18px;box-shadow:0 14px 30px rgba(0,0,0,.22)}
+.phone .scr{background:#EEF1F4;border-radius:24px;min-height:300px;padding:12px 10px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.phone .bar{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#333;padding:0 6px}
+.phone .who{text-align:center;font-size:12px;font-weight:700;color:#444;margin:4px 0}
+.phone .who span{display:block;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;margin:0 auto 4px;display:grid;place-items:center}
+.sms{align-self:flex-start;max-width:92%;background:#fff;border-radius:16px 16px 16px 4px;padding:9px 11px;font-size:12.5px;line-height:1.4;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sms.new{animation:smsIn .5s cubic-bezier(.2,1.4,.4,1)}
+.sms small{display:block;font-size:10px;color:#888;margin-top:3px}
+@keyframes smsIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
+.phone.buzz{animation:buzz .4s linear 2}
+@keyframes buzz{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) rotate(-1deg)}40%{transform:translateX(4px) rotate(1deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:14px;font-weight:600}
+.switch{position:relative;width:46px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:14px;background:#D6CFBF;transition:background .2s;pointer-events:none}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked + span{background:var(--green)}
+.switch input:checked + span::after{transform:translateX(18px)}
+.phone-in{display:grid;grid-template-columns:72px 1fr;gap:8px}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 10px;text-align:center;color:var(--muted);font-weight:600}
+.spinner{width:46px;height:46px;border-radius:50%;border:4px solid var(--green-soft);border-top-color:var(--green);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps-check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;text-align:left;font-size:14px}
+.steps-check li{display:flex;gap:8px;align-items:center;opacity:.35;transition:opacity .3s}
+.steps-check li.on{opacity:1}
+.steps-check .d{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.small{font-size:12px;color:var(--muted);line-height:1.45;margin:6px 0 0}
+.how3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.how3 div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center;font-size:13px;font-weight:600;line-height:1.3}
+.how3 .hi{width:42px;height:42px;border-radius:12px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;margin:0 auto 8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;font-weight:600;z-index:50;transition:opacity .25s,transform .25s;max-width:min(90vw,420px);text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:899px){
+  header.top{padding:8px 12px;gap:8px;min-height:54px}
+  .brand-name,.user-chip .nm,.flowsteps .lbl,.flowsteps .sep{display:none}
+  .flowsteps .s.on .lbl{display:inline}
+  .brand-mark{width:32px;height:32px}
+  .main{grid-template-columns:1fr;grid-template-rows:42% 1fr}
+  .panel{border-left:0;border-radius:22px 22px 0 0;margin-top:-18px;z-index:4;box-shadow:0 -8px 24px rgba(30,42,34,.10)}
+  .panel-inner{padding:20px 16px 8px}
+  .carousel{margin:0 -16px;padding-left:16px;padding-right:16px}
+  .cta-bar{padding:12px 16px 16px}
+  h1.title{font-size:25px}
+  .ov-top{top:10px;max-width:calc(100% - 64px);left:10px;transform:none}
+  .pill{font-size:12px;padding:7px 12px}
+  .ov-bl{left:10px;bottom:28px}
+  .legend{min-width:0;padding:8px 10px;font-size:11px}
+  .legend .row.dim{display:none}
+  .ov-draw{bottom:28px}
+  .crops{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ptabs{top:-20px}
+  .ptabs button{font-size:13px;gap:4px}
+  .toast{bottom:auto;top:62px;transform:translate(-50%,-20px)}
+  .toast.show{transform:translate(-50%,0)}
+}
+@media (max-width:380px){.crops{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media print{header.top,.stage,.cta-bar,.btn,.ptabs{display:none!important}.main{display:block}.panel{overflow:visible;border:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Rediseño v5: herramienta de campo, legible al sol ===== */
+:root{--ink:#18232E;--muted:#55606B;--cream:#F1F4F2;--line:#DCE2DE;--green:#1F7A4D;--green-2:#2C8F5C;--green-soft:#E1F1E7;--terra:#C8361B;--terra-soft:#FBE4DE;--gold-soft:#FFF1CC;--gold-ink:#6E4B00;--sky:#1662C4;--sky-soft:#E3EEFB;--violet:#5144C9;--violet-soft:#ECEAFB}
+body{font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--cream);font-size:16px}
+h1.title,.brand,.reco-name,.pcard .nm{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;letter-spacing:-.01em}
+h1.title{font-size:26px;font-weight:700;line-height:1.15;margin:2px 0 6px}
+.lead{font-size:16px;line-height:1.5}
+.brand{font-size:20px;font-weight:700;color:var(--ink)}
+.brand-mark{border-radius:9px}
+header.top{border-bottom-color:var(--line)}
+.eyebrow{text-transform:none;letter-spacing:0;font-size:14px;font-weight:400;color:var(--muted)}
+.main{grid-template-columns:420px minmax(0,1fr)}
+.panel{order:-1;border-left:0;border-right:1px solid var(--line);background:var(--cream)}
+.panel-inner{animation:none}
+.cta-bar{background:linear-gradient(rgba(241,244,242,0),var(--cream) 30%)}
+.card{border-radius:14px;box-shadow:none}
+.card h3{font-size:16px}
+.btn{border-radius:12px;font-weight:700}
+.btn-primary{min-height:54px;font-size:17px}
+.btn-primary:hover{background:#18643F}
+.pill{border-radius:10px;box-shadow:0 1px 2px rgba(24,35,46,.14),0 6px 14px rgba(24,35,46,.08);font-weight:700}
+.legend{border-radius:12px;box-shadow:0 1px 2px rgba(24,35,46,.14)}
+.tag{border-radius:6px;font-size:13px;padding:3px 8px}
+.guide{margin-bottom:12px}
+.guide .avatar{display:none}
+.bubble{background:transparent;border:0;padding:0;font-size:16px;color:var(--ink);align-items:center}
+.listen{width:auto;height:36px;border-radius:18px;padding:0 12px;gap:6px;display:inline-flex;align-items:center;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line)}
+.listen::after{content:"Escuchar"}
+.listen.on::after{content:"Parar"}
+.ptabs{top:0!important;background:var(--cream);border-radius:0;padding:0;gap:0;border-bottom:1px solid var(--line);margin:8px -22px 16px;padding:0 10px}
+.ptabs button{border-radius:0;border-bottom:3px solid transparent;min-height:50px;font-size:15px}
+.ptabs button[aria-pressed="true"]{background:transparent;box-shadow:none;color:var(--ink);border-bottom-color:var(--green)}
+.seg{border-radius:12px;background:#E3E8E4}
+.seg button{border-radius:9px;font-size:15px}
+.option{border-radius:12px;border-width:1px}
+.option .oi{border-radius:10px}
+.crop{border-radius:12px;border-width:1px}
+.crop[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--green)}
+.pcard{border-radius:16px;width:84%}
+.pcard .band{height:76px}
+.pcard .piso{border-radius:6px}
+.pcard .al{border-radius:8px}
+.add-card{border-radius:16px;border-width:1.5px}
+.alert{border-radius:12px}
+.alert .when{text-transform:none;letter-spacing:0;font-size:13px;color:var(--muted)}
+.reco{border-width:2px;border-radius:16px}
+.yr{border-radius:12px}
+.yr .yl{font-size:13px;font-weight:400;opacity:1;color:var(--muted)}
+.kv .v,.stat .v{font-variant-numeric:tabular-nums}
+.how3 div{border-radius:12px}
+.profile{width:100%;height:auto;display:block;border-radius:14px;margin:4px 0 14px;background:#D9E6EE}
+.phone{border-radius:30px}
+.sms-dot{border-radius:6px}
+.user-chip .av{background:#E3E8E4;color:var(--ink)}
+@media (max-width:899px){
+  .main{grid-template-columns:1fr;grid-template-rows:42% 1fr}
+  .panel{order:0;border-right:0;border-radius:20px 20px 0 0}
+  .panel-inner::before{content:"";display:block;width:42px;height:5px;border-radius:3px;background:#C3CCC6;margin:-8px auto 14px}
+  .ptabs{margin:8px -16px 16px;padding:0 4px}
+  .ptabs button{font-size:14px}
+  h1.title{font-size:24px}
+}
+
+.cwrap{position:relative}
+.cnav{position:absolute;top:22px;z-index:3;width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(24,35,46,.18);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:opacity .2s}
+.cnav.prev{left:-8px}.cnav.next{right:-8px}
+.cnav:disabled{opacity:0;pointer-events:none}
+.cnav:focus-visible,.dots button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+@media (hover:none){.cnav{display:none}}
+.carousel.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
+@media (hover:hover){.carousel{cursor:grab}}
+.dots{gap:0}
+.dots button{width:26px;height:26px;border:0;background:none;padding:0;display:grid;place-items:center;cursor:pointer}
+
+.ill{box-shadow:inset 0 -2px 0 rgba(0,0,0,.05),0 1px 2px rgba(24,35,46,.10)}
+.alert .ai,.reasons .ri,.option .oi,.how3 .hi{background:#fff!important;box-shadow:0 1px 2px rgba(24,35,46,.10),inset 0 0 0 1px #E6EBE8;color:inherit}
+.alert .ai svg,.option .oi svg,.how3 .hi svg{width:26px;height:26px}
+.reasons .ri svg{width:20px;height:20px}
+.seg button .mc{width:20px;height:20px}
+.tag .mc{width:15px;height:15px}
+.pill .mc{width:18px;height:18px}
+.sms-dot .mc{width:16px;height:16px}
+.pcard .al .mc{width:18px;height:18px}
+.pcard .al{background:#F4F6F5!important;color:var(--ink)!important}
+
+/* ===== v6: alertas primero ===== */
+.anom{display:flex;gap:12px;align-items:center;background:#FFF6DB;border:1px solid #F2D58A;border-radius:12px;padding:12px 14px;margin:0 0 14px}
+.anom b{display:block;font-size:15px;line-height:1.3}.anom span{font-size:13px;color:var(--muted)}
+.anom svg{width:30px;height:30px;flex:none}
+.pcard .al{display:flex;align-items:center;gap:8px}
+.pcard .al.sev-alta{background:#FEE4E2!important;color:#B42318!important}
+.pcard .al.sev-media{background:#FFF1CC!important;color:#6E4B00!important}
+.acard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.acard.frost{border-color:#C9C3F6}.acard.rain{border-color:#BBD3F5}.acard.dry{border-color:#F2D58A}
+.ahead{display:flex;gap:12px;align-items:flex-start}
+.acard .ai{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;flex:none;background:#fff;box-shadow:0 1px 2px rgba(24,35,46,.1),inset 0 0 0 1px #E6EBE8}
+.sev{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:6px}
+.acard .when{font-size:14px;color:var(--muted)}
+.acard .at{display:block;font-size:19px;line-height:1.25;margin-top:4px}
+.aw{margin:10px 0 0;font-size:15px;line-height:1.45;color:#3A443C}
+.aff{margin:8px 0 0;font-size:15px;line-height:1.45;font-weight:700;background:#F4F6F5;border-radius:8px;padding:8px 10px}
+.adoh{margin:14px 0 6px;font-size:15px}
+.todo{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:2px}
+.todo label{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:15px;line-height:1.45;cursor:pointer}
+.todo input{width:22px;height:22px;accent-color:var(--green);flex:none;margin:1px 0 0}
+.todo input:checked + span{text-decoration:line-through;color:var(--muted)}
+.todo.short{margin:10px 0 2px;padding-left:18px;list-style:disc}
+.todo.short li{font-size:15px;line-height:1.45;padding:2px 0}
+.sbar{position:relative;display:flex;gap:3px;margin:8px 0 6px;padding-top:26px}
+.sseg{height:30px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#18232E}
+.sseg.on{color:#fff;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.sseg span{white-space:nowrap;overflow:hidden}
+.smark{position:absolute;top:0;bottom:-4px;width:2px;background:#18232E;transform:translateX(-1px)}
+.smark b{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#18232E;color:#fff;font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.sdates{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:8px}
+.cmpbars{display:flex;flex-direction:column;gap:10px}
+.cmpbars div{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;font-size:14px}
+.cmpbars span{grid-column:1/3;color:var(--muted)}
+.cmpbars i{display:block;height:12px;border-radius:6px;background:#8DBEDC}
+.cmpbars b{font-variant-numeric:tabular-nums}
+.nextcard{width:100%;display:flex;gap:12px;align-items:center;cursor:pointer;font:inherit;color:inherit}
+.nextcard span{font-size:14px;color:var(--muted)}
+.evalc{border-width:2px}.evalc.lvlb3{border-color:var(--green)}.evalc.lvlb2{border-color:#E8B33A}.evalc.lvlb1{border-color:#D9644A}
+.ehead{display:flex;gap:14px;align-items:center}
+.when2{font-size:15px;line-height:1.5;margin:12px 0 4px}
+.reasons li.con span:last-child{color:#7A2E1A}
+.reasons .ri{background:#fff!important;box-shadow:0 1px 2px rgba(24,35,46,.1),inset 0 0 0 1px #E6EBE8}
+.altc{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.altc b{display:block;font-size:16px}.altc span{display:block;font-size:13px;color:var(--muted);margin:2px 0 6px;line-height:1.35}
+.camps{display:flex;flex-direction:column;gap:8px}
+.camp{display:grid;grid-template-columns:96px auto 1fr;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#F4F6F5;transition:box-shadow .3s}
+.camp.live{box-shadow:inset 0 0 0 2px var(--green)}
+.camp .cl{font-weight:700;font-size:14px;line-height:1.2}.camp .cl small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.camp .cd b{display:block;font-size:15px}.camp .cd span{font-size:13px;color:var(--muted);line-height:1.35}
+.camp.now{background:#E1F1E7}
+.months{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.months button{min-height:52px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px}
+.months button small{font-size:11px;color:var(--muted)}
+.months button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.months button[aria-pressed="true"] small{color:#E1F1E7}
+.contacts{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px}
+.contacts li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.contacts li>div{flex:1}.contacts b{display:block;font-size:15px}.contacts span{font-size:13px;color:var(--muted)}
+.cav{width:36px;height:36px;border-radius:50%;background:#E3E8E4;display:grid;place-items:center;font-weight:700;flex:none}
+.iconx{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;cursor:pointer;color:#B42318}
+.addc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.addc select{grid-column:1/3}
+.alert{cursor:pointer;font:inherit;color:inherit}
+.ptabs{grid-template-columns:repeat(4,1fr)}
+.ptabs button{gap:4px;font-size:14px;white-space:nowrap}.ptabs button svg{display:none}
+@media (max-width:899px){.ptabs button{font-size:13px;gap:3px}.ptabs button svg{display:none}.camp{grid-template-columns:78px auto 1fr}.months{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <button class="brand" data-act="home" aria-label="Muyuy, mis parcelas"><span class="brand-mark" id="brandMark"></span><span class="brand-name">Muyuy</span></button>
+    <div class="hdr-mid" id="hdrMid"></div>
+    <div id="hdrRight"></div>
+  </header>
+  <div class="main">
+    <section class="stage" id="stage" aria-label="Mapa 3D de Chiara">
+      <div id="map"></div>
+      <div class="map-fallback"><div id="fbIcon"></div><b>El mapa 3D necesita internet</b><span>Conéctate para ver Chiara con imagen satelital y relieve real. La app sigue funcionando.</span></div>
+      <div class="ov ov-top hidden" id="ovTop"></div>
+      <div class="ov ov-bl hidden" id="ovLegend"></div>
+      <div class="ov ov-draw hidden" id="ovDraw">
+        <button class="btn btn-ghost" data-act="undo">Deshacer</button>
+        <button class="btn btn-dark" data-act="finishDraw" id="finishBtn" disabled>Listo</button>
+      </div>
+    </section>
+    <aside class="panel" id="panel" aria-live="polite">
+      <div class="panel-inner" id="panelInner"></div>
+      <div class="cta-bar" id="cta"></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="cropShade" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1.2" stdDeviation="0.9" flood-color="#3A2A10" flood-opacity=".22"/></filter></defs></svg>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+"use strict";
+/* ===== Configuración =====
+   SMS_ENDPOINT: URL de su función (Twilio u otro) que recibe POST {to, body} y envía el SMS.
+   Si queda vacío, la app muestra el SMS en el celular de muestra y, en un celular, abre la app de mensajes. */
+const SMS_ENDPOINT=/netlify\.app$/.test(location.hostname)?'/.netlify/functions/sms':'';
+/* ANOM_CONFIG: pega aquí la línea que imprime el script de Earth Engine (gee_anomalia_chiara.js).
+   rainPct: % de lluvia vs. lo normal (GPM IMERG). soilPct: % de humedad del suelo vs. lo normal (SMAP). */
+const ANOM_CONFIG={rainPct:-32,soilPct:-18,period:'últimos 30 días',live:false};
+
+const $=s=>document.querySelector(s);
+
+/* ===== Icons (stroke) ===== */
+const P={
+  sprout:'<path d="M12 21v-9"/><path d="M12 12C12 8 9 6 4.5 6 4.5 10 7.5 12 12 12z"/><path d="M12 12c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z"/>',
+  pin:'<path d="M12 21s-7-6.4-7-12a7 7 0 0 1 14 0c0 5.6-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  draw:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
+  target:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15"/><path d="M5 19l7-7"/>',
+  coins:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 9.5h-3.5a1.75 1.75 0 0 0 0 3.5h2a1.75 1.75 0 0 1 0 3.5H9.5"/>',
+  snow:'<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/>',
+  rain:'<path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.4A4 4 0 0 1 17 15z"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  mountain:'<path d="M2 20l7-12 4 6 3-4 6 10z"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  left:'<path d="M15 6l-6 6 6 6"/>', right:'<path d="M9 6l6 6-6 6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',
+  sat:'<path d="M13.5 10.5l-3 3"/><path d="M7 11l6-6 3 3-6 6z"/><path d="M14 4l2-2 3 3-2 2M4 14l-2 2 3 3 2-2"/><path d="M15 19a4 4 0 0 0 4-4M15 22a7 7 0 0 0 7-7"/>',
+  speaker:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  home:'<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  sms:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/>',
+  edit:'<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 7l4 4"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  house:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  cart:'<path d="M3 4h2l2.5 11h11L21 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  both:'<path d="M3 11l5-4 5 4v8H3z"/><path d="M14 9h2l1.5 7h4.5"/><circle cx="17" cy="19" r="1.3"/>',
+  cow:'<path d="M5 9c0-2 1.5-3.5 3.5-3.5h7C17.5 5.5 19 7 19 9v4a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/><path d="M5 8L3 6M19 8l2-2M10 14h.01M14 14h.01M9 10h.01M15 10h.01"/>',
+  thermo:'<path d="M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9v7"/>',
+  wave:'<path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 14c3-3 6 3 9 0s6 3 9 0"/>',
+  phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  send:'<path d="M3 11l18-8-8 18-2-8z"/><path d="M11 13l10-10"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>'
+};
+
+/* ===== Multicolor icons (semantic) ===== */
+const MC={
+ sun:'<defs><linearGradient id="mcSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE15A"/><stop offset="1" stop-color="#FFA41B"/></linearGradient></defs><g stroke="#FFB21E" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g><circle cx="12" cy="12" r="5.6" fill="url(#mcSun)"/><ellipse cx="10.2" cy="9.8" rx="2" ry="1.3" fill="#fff" opacity=".45"/>',
+ rain:'<defs><linearGradient id="mcCl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9D7E8"/></linearGradient><linearGradient id="mcDr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5DB4FF"/><stop offset="1" stop-color="#1C6FE0"/></linearGradient></defs><path d="M6.6 15.2A4.2 4.2 0 0 1 6.4 6.8a5.6 5.6 0 0 1 10.6-.9 4.3 4.3 0 0 1 .6 9.3z" fill="url(#mcCl)" stroke="#9FB3CC" stroke-width=".8"/><g fill="url(#mcDr)"><path d="M8 17.2l-1.2 2.6a1 1 0 0 0 1.8.8l1-2.4z"/><path d="M12.4 17.2l-1.2 2.6a1 1 0 0 0 1.8.8l1-2.4z"/><path d="M16.8 17.2l-1.2 2.6a1 1 0 0 0 1.8.8l1-2.4z"/></g>',
+ snow:'<defs><linearGradient id="mcSn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FDCFF"/><stop offset="1" stop-color="#5A5CF0"/></linearGradient></defs><g stroke="url(#mcSn)" stroke-width="2.3" stroke-linecap="round" fill="none"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"/><path d="M9.4 4.2 12 6.6l2.6-2.4M9.4 19.8 12 17.4l2.6 2.4M4.3 10.6l3.3-.9-.8-3.4M19.7 13.4l-3.3.9.8 3.4M4.3 13.4l3.3.9-.8 3.4M19.7 10.6l-3.3-.9.8-3.4"/></g><circle cx="12" cy="12" r="1.8" fill="#fff" stroke="#6E7CF5" stroke-width="1"/>',
+ drop:'<defs><linearGradient id="mcDp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6CCBFF"/><stop offset="1" stop-color="#1767E3"/></linearGradient></defs><path d="M12 2.4s6.6 7.1 6.6 12.1a6.6 6.6 0 0 1-13.2 0C5.4 9.5 12 2.4 12 2.4z" fill="url(#mcDp)"/><path d="M8.6 14.2c0-1.9 1-3.7 2-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".75"/>',
+ mountain:'<defs><linearGradient id="mcMt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CC56A"/><stop offset="1" stop-color="#2F7D3E"/></linearGradient></defs><path d="M13.5 20.5 18 9.5l4.5 11z" fill="#8E97AE"/><path d="M16.6 13 18 9.5l1.4 3.5-1.4-.8z" fill="#fff"/><path d="M1.5 20.5 9.5 5l8 15.5z" fill="url(#mcMt)"/><path d="M7.3 9.3 9.5 5l2.2 4.3-1.1-.6-1.1.9-1.1-.9z" fill="#fff"/>',
+ sprout:'<defs><linearGradient id="mcLf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9BE36E"/><stop offset="1" stop-color="#23944A"/></linearGradient><linearGradient id="mcSl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B07A4C"/><stop offset="1" stop-color="#7A4F2E"/></linearGradient></defs><path d="M12 19V11" stroke="#2E8A44" stroke-width="2" stroke-linecap="round"/><path d="M12 12C12 7.6 8.8 5.4 4 5.4c0 4.4 3.2 6.6 8 6.6z" fill="url(#mcLf)"/><path d="M12 11c0-3.8 2.6-6.4 7.4-6.4 0 3.8-2.6 6.4-7.4 6.4z" fill="url(#mcLf)"/><ellipse cx="12" cy="20" rx="7.5" ry="2.6" fill="url(#mcSl)"/>',
+ leaf:'<defs><linearGradient id="mcLe" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#249249"/><stop offset="1" stop-color="#A6E77E"/></linearGradient></defs><path d="M4 20C4 10.5 10.5 3.6 20.6 3.6 20.6 13.8 13.6 20.3 4 20z" fill="url(#mcLe)"/><path d="M5 19 15.5 8.5M10 14h4M12.5 11.4v3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>',
+ coins:'<defs><linearGradient id="mcCo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE57F"/><stop offset="1" stop-color="#E2A015"/></linearGradient></defs><ellipse cx="12" cy="17" rx="8" ry="3.4" fill="#C98A0E"/><ellipse cx="12" cy="15.6" rx="8" ry="3.4" fill="url(#mcCo)"/><ellipse cx="12" cy="11.2" rx="8" ry="3.4" fill="#C98A0E"/><ellipse cx="12" cy="9.8" rx="8" ry="3.4" fill="url(#mcCo)"/><ellipse cx="12" cy="9.8" rx="4.6" ry="1.7" fill="none" stroke="#C98A0E" stroke-width="1"/>',
+ house:'<defs><linearGradient id="mcRf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0704C"/><stop offset="1" stop-color="#C2412A"/></linearGradient></defs><path d="M5 11h14v9.5H5z" fill="#FFF0D6" stroke="#E7CFA6" stroke-width=".8"/><path d="M2.5 11.8 12 3.6l9.5 8.2z" fill="url(#mcRf)"/><rect x="10" y="14.4" width="4" height="6.1" rx="1" fill="#8A5A36"/><rect x="15.4" y="13" width="2.6" height="2.6" rx=".5" fill="#7FC3FF"/>',
+ cart:'<defs><linearGradient id="mcBk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2A866"/><stop offset="1" stop-color="#A9693A"/></linearGradient></defs><circle cx="8.5" cy="9" r="3" fill="#E9483A"/><circle cx="14" cy="8.4" r="3.2" fill="#F5A623"/><path d="M15.5 6.6c.8-1.6 2.2-2.2 3.6-2-0.4 1.4-1.6 2.4-3.6 2z" fill="#3DA35A"/><path d="M3 10.5h18l-2.2 9.4a1.5 1.5 0 0 1-1.5 1.1H6.7a1.5 1.5 0 0 1-1.5-1.1z" fill="url(#mcBk)"/><path d="M7 13.5v5M12 13.5v5M17 13.5v5" stroke="#8A5228" stroke-width="1.2" stroke-linecap="round"/>',
+ both:'<defs><linearGradient id="mcRf2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0704C"/><stop offset="1" stop-color="#C2412A"/></linearGradient><linearGradient id="mcCo2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE57F"/><stop offset="1" stop-color="#E2A015"/></linearGradient></defs><path d="M3 11h10v9H3z" fill="#FFF0D6" stroke="#E7CFA6" stroke-width=".8"/><path d="M1.6 11.6 8 5.6l6.4 6z" fill="url(#mcRf2)"/><rect x="6.6" y="15" width="2.8" height="5" rx=".8" fill="#8A5A36"/><circle cx="17.5" cy="15.5" r="5" fill="url(#mcCo2)" stroke="#C98A0E" stroke-width="1"/><path d="M17.5 13v5" stroke="#B57A0A" stroke-width="1.4" stroke-linecap="round"/>',
+ cow:'<path d="M5.5 7.5 3 5.6M18.5 7.5 21 5.6" stroke="#E9DCC3" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="4.4" cy="10" rx="2.4" ry="1.4" fill="#C9A98A"/><ellipse cx="19.6" cy="10" rx="2.4" ry="1.4" fill="#C9A98A"/><path d="M6 9.5C6 6.9 8.2 5 12 5s6 1.9 6 4.5v4.3H6z" fill="#FFFFFF" stroke="#E2D8CC" stroke-width=".8"/><path d="M13.4 5.2c1.8.3 3.2 1.4 3.6 3-1.6.4-3.2-.6-3.6-3z" fill="#5A3B26"/><circle cx="9.4" cy="10.2" r="1.1" fill="#2A2A2A"/><circle cx="14.6" cy="10.2" r="1.1" fill="#2A2A2A"/><rect x="6.6" y="12.6" width="10.8" height="7" rx="3.5" fill="#F6A9A3"/><ellipse cx="10" cy="16" rx="1" ry="1.3" fill="#C4615B"/><ellipse cx="14" cy="16" rx="1" ry="1.3" fill="#C4615B"/>',
+ sat:'<defs><linearGradient id="mcPn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4FA8FF"/><stop offset="1" stop-color="#2051C9"/></linearGradient></defs><g transform="rotate(-45 12 12)"><rect x="1.5" y="9.3" width="6.8" height="5.4" rx=".8" fill="url(#mcPn)"/><rect x="15.7" y="9.3" width="6.8" height="5.4" rx=".8" fill="url(#mcPn)"/><path d="M4.9 9.3v5.4M19.1 9.3v5.4M1.5 12h6.8M15.7 12h6.8" stroke="#BFE0FF" stroke-width=".7"/><path d="M8.3 12h7.4" stroke="#7E8796" stroke-width="1.2"/><rect x="9.4" y="8.4" width="5.2" height="7.2" rx="1.4" fill="#D9DEE6" stroke="#9AA3B1" stroke-width=".8"/><circle cx="12" cy="18.4" r="1.6" fill="#9AA3B1"/></g><path d="M16.5 19.6a4 4 0 0 0 3.1-3.1M17 22a6.6 6.6 0 0 0 5-5" stroke="#FF8A3D" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+ sms:'<defs><linearGradient id="mcMs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5BE584"/><stop offset="1" stop-color="#14B04A"/></linearGradient></defs><path d="M12 3.5c5.2 0 9.2 3.4 9.2 7.6s-4 7.6-9.2 7.6c-1 0-2-.1-2.9-.4L4.6 20.4l1.2-3.6C3.8 15.4 2.8 13.4 2.8 11.1 2.8 6.9 6.8 3.5 12 3.5z" fill="url(#mcMs)"/><g fill="#fff"><circle cx="8.2" cy="11.1" r="1.25"/><circle cx="12" cy="11.1" r="1.25"/><circle cx="15.8" cy="11.1" r="1.25"/></g>',
+ bell:'<defs><linearGradient id="mcBl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD85A"/><stop offset="1" stop-color="#F29A12"/></linearGradient></defs><path d="M12 3a6 6 0 0 0-6 6v4.6l-1.8 2.6c-.4.6 0 1.3.7 1.3h14.2c.7 0 1.1-.7.7-1.3L18 13.6V9a6 6 0 0 0-6-6z" fill="url(#mcBl)"/><path d="M9.6 19.5a2.4 2.4 0 0 0 4.8 0z" fill="#D88409"/><circle cx="18" cy="5.6" r="3" fill="#FF3B30" stroke="#fff" stroke-width="1.4"/>',
+ cal:'<rect x="3" y="4" width="18" height="17" rx="3.4" fill="#fff" stroke="#DADDE2" stroke-width=".8"/><path d="M3 7.4A3.4 3.4 0 0 1 6.4 4h11.2A3.4 3.4 0 0 1 21 7.4V9H3z" fill="#FF4B3E"/><g fill="#C4C9D1"><circle cx="7.5" cy="12.6" r="1"/><circle cx="12" cy="12.6" r="1"/><circle cx="16.5" cy="12.6" r="1"/><circle cx="7.5" cy="16.6" r="1"/><circle cx="16.5" cy="16.6" r="1"/></g><circle cx="12" cy="16.6" r="1.8" fill="#2F9E57"/>',
+ target:'<defs><radialGradient id="mcLoc" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#5AA9FF"/><stop offset="1" stop-color="#1F6FE6"/></radialGradient></defs><circle cx="12" cy="12" r="10" fill="#1F6FE6" opacity=".14"/><circle cx="12" cy="12" r="6.2" fill="#fff" stroke="#E3E8EF" stroke-width=".6"/><circle cx="12" cy="12" r="4.6" fill="url(#mcLoc)"/>',
+ draw:'<defs><linearGradient id="mcPc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD84D"/><stop offset="1" stop-color="#F2A60C"/></linearGradient></defs><path d="M15.6 3.6 20.4 8.4 9.2 19.6 4.4 14.8z" fill="url(#mcPc)"/><path d="M15.6 3.6l1.8-1.8a1.6 1.6 0 0 1 2.2 0l2.6 2.6a1.6 1.6 0 0 1 0 2.2l-1.8 1.8z" fill="#FF8FA3"/><path d="M4.4 14.8 2.8 21.2l6.4-1.6z" fill="#F3DDB8"/><path d="M3.4 18.8 2.8 21.2l2.4-.6z" fill="#3A3A3A"/><path d="M6.4 16.8 17.6 5.6" stroke="#fff" stroke-width="1" opacity=".55"/>',
+ pin:'<defs><linearGradient id="mcPi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7A63"/><stop offset="1" stop-color="#E0352A"/></linearGradient></defs><ellipse cx="12" cy="21.4" rx="3.6" ry="1" fill="#000" opacity=".15"/><path d="M12 21s-7-6.2-7-11.8a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="url(#mcPi)"/><circle cx="12" cy="9.3" r="2.8" fill="#fff"/>',
+ thermo:'<path d="M10 14.4V5a2 2 0 0 1 4 0v9.4a4 4 0 1 1-4 0z" fill="#fff" stroke="#C9CED6" stroke-width="1"/><circle cx="12" cy="17.6" r="2.6" fill="#FF4B3E"/><path d="M12 8.5v8" stroke="#FF4B3E" stroke-width="2" stroke-linecap="round"/>',
+ info:'<defs><linearGradient id="mcIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4DA6FF"/><stop offset="1" stop-color="#1A63DB"/></linearGradient></defs><circle cx="12" cy="12" r="9.5" fill="url(#mcIn)"/><circle cx="12" cy="7.6" r="1.4" fill="#fff"/><path d="M12 11v6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>',
+ user:'<defs><linearGradient id="mcUs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B49CFF"/><stop offset="1" stop-color="#7653E8"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#mcUs)"/><circle cx="12" cy="9.6" r="3.4" fill="#fff"/><path d="M5.8 18.6c1.3-2.9 3.6-4.2 6.2-4.2s4.9 1.3 6.2 4.2a8.6 8.6 0 0 1-12.4 0z" fill="#fff"/>'
+};
+const icm=(n,s=20,w=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const ic=(n,s=20,w=2)=>MC[n]?`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true" class="mc">${MC[n]}</svg>`:icm(n,s,w);
+
+/* ===== Crop illustrations (filled, realistic-ish) ===== */
+const CROP_ART={
+  'Papa':{bg:'#F3E6D2',art:'<ellipse cx="22" cy="29" rx="13" ry="9.5" fill="#C89257"/><ellipse cx="30" cy="25" rx="9" ry="7" fill="#D7A367"/><circle cx="18" cy="27" r="1.2" fill="#8A5A2B"/><circle cx="24" cy="32" r="1.1" fill="#8A5A2B"/><circle cx="31" cy="23" r="1" fill="#9A6A38"/><circle cx="16" cy="32" r="1" fill="#8A5A2B"/><path d="M27 18c0-4 2-6 5-7-1 3-2 5-5 7z" fill="#5E9B3E"/><path d="M27 18c-1-3-3-5-6-5 1 3 3 4 6 5z" fill="#79B356"/>'},
+  'Papa nativa':{bg:'#EDE2EE',art:'<ellipse cx="21" cy="29" rx="12" ry="8.5" fill="#6C3A6E"/><ellipse cx="30" cy="24" rx="8" ry="6.5" fill="#8B4C86"/><ellipse cx="15" cy="22" rx="5" ry="4" fill="#C9A24B"/><circle cx="18" cy="28" r="1" fill="#3E1F40"/><circle cx="25" cy="31" r="1" fill="#3E1F40"/><circle cx="31" cy="22" r="1" fill="#4E2850"/>'},
+  'Maíz':{bg:'#FBF0CF',art:'<path d="M14 38c2-10 6-19 10-26 4 7 8 16 10 26-4-3-7-4-10-4s-6 1-10 4z" fill="#6BA34A"/><ellipse cx="24" cy="21" rx="6" ry="12" fill="#F2C53D"/><g fill="#E0A92A"><circle cx="22" cy="14" r="1.3"/><circle cx="26" cy="14" r="1.3"/><circle cx="21" cy="18" r="1.3"/><circle cx="24" cy="18" r="1.3"/><circle cx="27" cy="18" r="1.3"/><circle cx="21" cy="22" r="1.3"/><circle cx="24" cy="22" r="1.3"/><circle cx="27" cy="22" r="1.3"/><circle cx="22" cy="26" r="1.3"/><circle cx="26" cy="26" r="1.3"/></g><path d="M24 9c-1-3 0-5 1-6" stroke="#B8862E" stroke-width="1.5" fill="none"/>'},
+  'Haba':{bg:'#E3F0DA',art:'<path d="M9 33c2-12 13-21 29-22 1 12-11 23-26 24z" fill="#5E9B3E"/><path d="M12 31c3-9 12-15 23-17" stroke="#87C062" stroke-width="2" fill="none"/><ellipse cx="17" cy="27" rx="3.2" ry="2.6" fill="#B9DE8F"/><ellipse cx="23" cy="22" rx="3.2" ry="2.6" fill="#B9DE8F"/><ellipse cx="29" cy="17.5" rx="3.2" ry="2.6" fill="#B9DE8F"/>'},
+  'Quinua':{bg:'#FBE3D6',art:'<path d="M24 40V20" stroke="#7A8F3A" stroke-width="2.5"/><path d="M24 30c-5-1-8-4-9-8 4 0 7 3 9 8zM24 34c5-1 8-4 9-8-4 0-7 3-9 8z" fill="#7FAF4A"/><g fill="#D2552C"><circle cx="24" cy="11" r="3.5"/><circle cx="19.5" cy="14" r="3.2"/><circle cx="28.5" cy="14" r="3.2"/><circle cx="21" cy="18.5" r="3"/><circle cx="27" cy="18.5" r="3"/><circle cx="24" cy="15.5" r="3"/></g><g fill="#E9874E"><circle cx="21.5" cy="10" r="1.5"/><circle cx="27" cy="11" r="1.4"/><circle cx="24" cy="20" r="1.5"/></g>'},
+  'Tarwi':{bg:'#E3E8F6',art:'<path d="M24 40V12" stroke="#6E8F3A" stroke-width="2.5"/><g fill="#4F6FC0"><ellipse cx="24" cy="9" rx="3" ry="3.5"/><ellipse cx="20.5" cy="14" rx="3" ry="2.6"/><ellipse cx="27.5" cy="14" rx="3" ry="2.6"/><ellipse cx="20.5" cy="19" rx="3" ry="2.6"/><ellipse cx="27.5" cy="19" rx="3" ry="2.6"/></g><g fill="#F6F0FF"><circle cx="20.5" cy="13.5" r="1"/><circle cx="27.5" cy="18.5" r="1"/></g><g fill="#6EA548"><ellipse cx="15" cy="31" rx="7" ry="2.5" transform="rotate(-25 15 31)"/><ellipse cx="33" cy="31" rx="7" ry="2.5" transform="rotate(25 33 31)"/><ellipse cx="24" cy="29" rx="2.5" ry="6"/></g>'},
+  'Cebada':{bg:'#F8EED3',art:'<path d="M24 41V14" stroke="#B48A34" stroke-width="2"/><g fill="#D9B04A"><ellipse cx="21" cy="17" rx="2.6" ry="4" transform="rotate(-20 21 17)"/><ellipse cx="27" cy="17" rx="2.6" ry="4" transform="rotate(20 27 17)"/><ellipse cx="21" cy="24" rx="2.6" ry="4" transform="rotate(-20 21 24)"/><ellipse cx="27" cy="24" rx="2.6" ry="4" transform="rotate(20 27 24)"/><ellipse cx="24" cy="11" rx="2.4" ry="4"/></g><path d="M24 7V2M20 13l-4-7M28 13l4-7M19 20l-6-5M29 20l6-5" stroke="#C9A24B" stroke-width="1" fill="none"/>'},
+  'Avena':{bg:'#F1F2D6',art:'<path d="M24 41V10" stroke="#9AA33A" stroke-width="2"/><g fill="#CDBE62"><ellipse cx="18" cy="16" rx="2.4" ry="4.2" transform="rotate(30 18 16)"/><ellipse cx="30" cy="16" rx="2.4" ry="4.2" transform="rotate(-30 30 16)"/><ellipse cx="17" cy="25" rx="2.4" ry="4.2" transform="rotate(30 17 25)"/><ellipse cx="31" cy="25" rx="2.4" ry="4.2" transform="rotate(-30 31 25)"/><ellipse cx="24" cy="9" rx="2.2" ry="4"/></g><path d="M24 14l-5 0M24 14l5 0M24 23l-6 0M24 23l6 0" stroke="#9AA33A" stroke-width="1.2"/>'},
+  'Avena + vicia':{bg:'#E8F1DA',art:'<path d="M18 41V12" stroke="#9AA33A" stroke-width="2"/><g fill="#CDBE62"><ellipse cx="14" cy="17" rx="2.2" ry="4" transform="rotate(30 14 17)"/><ellipse cx="22" cy="17" rx="2.2" ry="4" transform="rotate(-30 22 17)"/><ellipse cx="18" cy="10" rx="2" ry="3.6"/><ellipse cx="14" cy="25" rx="2.2" ry="4" transform="rotate(30 14 25)"/></g><path d="M31 41c0-8 1-14 3-20" stroke="#5E9B3E" stroke-width="2" fill="none"/><g fill="#8E5BC2"><ellipse cx="34" cy="18" rx="3" ry="2.4"/><ellipse cx="31" cy="23" rx="2.6" ry="2.2"/><ellipse cx="36" cy="24" rx="2.6" ry="2.2"/></g><ellipse cx="27" cy="31" rx="4" ry="1.8" fill="#79B356" transform="rotate(-30 27 31)"/><ellipse cx="36" cy="31" rx="4" ry="1.8" fill="#79B356" transform="rotate(30 36 31)"/>'},
+  'Oca':{bg:'#F8E1E6',art:'<path d="M12 22c2-6 8-7 11-4 3 3 4 12-1 17-4 4-11-5-10-13z" fill="#D9577A"/><path d="M26 18c3-5 9-4 11 0 2 5-1 14-6 16-5 2-7-10-5-16z" fill="#E98A3F"/><path d="M15 22c2 0 4 1 5 3M16 28c2 0 3 1 4 2M29 21c2 0 4 1 5 3M28 27c2 0 3 1 4 2" stroke="rgba(0,0,0,.25)" stroke-width="1.2" fill="none"/>'},
+  'Pastos':{bg:'#E3F0DA',art:'<path d="M10 40c0-8-2-14-5-18 5 3 8 9 8 18zM16 40c0-11 1-19 4-26 1 9 0 18-1 26zM24 40c0-12 2-21 6-28 0 10-2 20-3 28zM31 40c0-9 3-15 8-19-3 6-5 12-5 19zM37 40c0-6 2-10 6-12-2 4-3 8-3 12z" fill="#5E9B3E"/><path d="M13 40c1-8 3-13 6-16-1 6-2 11-2 16zM28 40c1-7 3-12 7-15-2 5-3 10-3 15z" fill="#87C062"/>'},
+  'Descanso':{bg:'#EFE4D4',art:'<path d="M4 30c6-3 12-3 20 0s14 3 20 0v14H4z" fill="#A47A50"/><path d="M4 36c6-3 12-3 20 0s14 3 20 0" stroke="#8A6340" stroke-width="1.5" fill="none"/><path d="M14 30v-5M14 25c-2-1-3-3-3-4M14 25c2-1 3-3 3-4M33 30v-4M33 26c-2-1-2-2-2-3M33 26c2-1 2-2 2-3" stroke="#7FAF4A" stroke-width="1.6" fill="none" stroke-linecap="round"/>'}
+};
+const CROP_COL={'Papa':'#7FA65A','Papa nativa':'#8B4C86','Maíz':'#D9B53E','Haba':'#4E8A52','Quinua':'#C8623A','Tarwi':'#5E7FC2','Cebada':'#C9A44A','Avena':'#A7BE62','Avena + vicia':'#8CB865','Oca':'#D9577A','Pastos':'#6FA35A','Descanso':'#A88560','Maíz con haba':'#B8A94A','Avena forrajera':'#A7BE62'};
+CROP_ART['Maíz con haba']={bg:'#F3EFCF',art:CROP_ART['Maíz'].art.replace('<path d="M14 38','<path transform="translate(-6 0)" d="M14 38')+'<g transform="translate(14 14) scale(.55)">'+CROP_ART['Haba'].art+'</g>'};
+CROP_ART['Avena forrajera']=CROP_ART['Avena'];
+const art=(name,size=44)=>{const a=CROP_ART[name]||CROP_ART['Descanso'];return `<span class="ill" style="width:${size}px;height:${size}px;background:radial-gradient(circle at 32% 26%,#fff 0,${a.bg} 58%,${a.bg} 100%)"><svg viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true"><ellipse cx="24" cy="41" rx="13" ry="2.6" fill="#000" opacity=".08"/><g filter="url(#cropShade)">${a.art}</g></svg></span>`;};
+
+/* ===== Agronomy reference (general values; confirm local varieties with INIA) ===== */
+const PISOS={
+  quechua:{name:'Quechua',range:'hasta 3,500 m',col:'#6FA35A',desc:'Valle templado: maíz, haba, papa y quinua crecen bien.'},
+  suni:{name:'Suni',range:'3,500 – 4,000 m',col:'#C89B4E',desc:'Zona fría: papa nativa, oca, quinua, tarwi y cebada.'},
+  puna:{name:'Puna',range:'más de 4,000 m',col:'#8C8FA8',desc:'Muy fría: pastos, papa amarga y ganado.'}
+};
+const pisoOf=alt=>alt<3500?'quechua':alt<4000?'suni':'puna';
+const SUIT={
+  quechua:{'Papa':3,'Papa nativa':2,'Maíz':3,'Maíz con haba':3,'Haba':3,'Quinua':3,'Tarwi':2,'Cebada':3,'Avena':3,'Avena + vicia':3,'Oca':2,'Pastos':2,'Descanso':2},
+  suni:{'Papa':3,'Papa nativa':3,'Maíz':1,'Maíz con haba':1,'Haba':2,'Quinua':3,'Tarwi':3,'Cebada':3,'Avena':3,'Avena + vicia':3,'Oca':3,'Pastos':3,'Descanso':2},
+  puna:{'Papa':2,'Papa nativa':3,'Maíz':1,'Maíz con haba':1,'Haba':1,'Quinua':1,'Tarwi':1,'Cebada':2,'Avena':2,'Avena + vicia':2,'Oca':2,'Pastos':3,'Descanso':3}
+};
+// dur: meses de siembra a cosecha · win: meses buenos para sembrar (0 = enero) · frost: tolerancia a helada 1-3 · water: necesidad de agua 1-3
+const CI={
+  'Papa':{dur:6,win:[9,10],frost:1,water:2,fam:'tuber',range:'5 a 7 meses'},
+  'Papa nativa':{dur:7,win:[8,10],frost:2,water:2,fam:'tuber',range:'6 a 8 meses'},
+  'Oca':{dur:7,win:[8,10],frost:2,water:2,fam:'tuber',range:'7 a 8 meses'},
+  'Maíz':{dur:7,win:[8,10],frost:1,water:3,fam:'cereal',range:'6 a 8 meses'},
+  'Maíz con haba':{dur:7,win:[8,10],frost:1,water:3,fam:'mix',legume:true,range:'6 a 8 meses'},
+  'Haba':{dur:6,win:[8,10],frost:2,water:2,fam:'legume',legume:true,range:'5 a 7 meses'},
+  'Tarwi':{dur:7,win:[8,10],frost:3,water:1,fam:'legume',legume:true,range:'6 a 8 meses'},
+  'Quinua':{dur:6,win:[8,10],frost:2,water:1,fam:'grain',range:'5 a 7 meses'},
+  'Cebada':{dur:5,win:[11,1],frost:3,water:1,fam:'cereal',forage:true,range:'4 a 6 meses'},
+  'Avena':{dur:5,win:[11,1],frost:3,water:1,fam:'cereal',forage:true,range:'4 a 5 meses'},
+  'Avena + vicia':{dur:5,win:[11,1],frost:3,water:1,fam:'mix',legume:true,forage:true,range:'4 a 5 meses'},
+  'Pastos':{dur:12,win:[11,1],frost:3,water:1,fam:'pasture',forage:true,range:'perenne'}
+};
+const WHY={
+  'Papa':'Aprovecha la tierra descansada y abonada.',
+  'Papa nativa':'Resiste el frío y se guarda bien.',
+  'Oca':'Aguanta el frío de las alturas y alimenta a la familia.',
+  'Tarwi':'Devuelve abono a la tierra, aguanta el frío y la sequía.',
+  'Avena + vicia':'Cubre la tierra en meses fríos y alimenta a tus animales.',
+  'Avena':'Comida para tus animales en época seca.',
+  'Quinua':'Necesita poca agua y se vende bien.',
+  'Maíz con haba':'La haba abona al maíz mientras crecen juntos.',
+  'Maíz':'Base de la alimentación en el valle.',
+  'Haba':'Devuelve abono natural (nitrógeno) al suelo.',
+  'Cebada':'Aguanta heladas y deja paja para tus animales.',
+  'Pastos':'La tierra descansa cubierta y alimenta al ganado.'
+};
+const ASOC={
+  'Maíz con haba':'Siembra 1 surco de haba cada 2 surcos de maíz, o alterna golpes de maíz y haba en el mismo surco. La haba fija nitrógeno que aprovecha el maíz y su sombra ayuda a guardar humedad.',
+  'Avena + vicia':'Mezcla la semilla: más o menos 3 partes de avena por 1 de vicia. La avena sirve de tutor a la vicia y juntas dan más forraje y abonan el suelo.'
+};
+const inWin=(m,w)=>w[0]<=w[1]?(m>=w[0]&&m<=w[1]):(m>=w[0]||m<=w[1]);
+
+/* ===== Climate: NASA POWER (live if online, reference values otherwise) ===== */
+const TOWN={lng:-74.2058,lat:-13.2730,alt:3527};
+const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];
+const MF=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+const CLIM={live:false,refElev:TOWN.alt,
+  tmin:[5.5,5.6,5.3,3.8,1.2,-0.8,-1.3,-0.3,1.8,3.5,4.3,5.0],
+  tmax:[17.5,17.0,17.0,17.8,18.4,18.2,18.1,19.2,19.8,20.3,20.4,19.0],
+  rain:[130,140,115,45,12,5,6,12,25,48,62,98],
+  rh:[78,80,79,72,60,54,52,52,56,60,64,72]};
+async function loadPower(){
+  const url=`https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MIN,T2M_MAX,PRECTOTCORR,RH2M&community=AG&longitude=${TOWN.lng}&latitude=${TOWN.lat}&format=JSON`;
+  try{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),9000);
+    const r=await fetch(url,{signal:ctl.signal}); clearTimeout(to); if(!r.ok)throw 0;
+    const j=await r.json(), p=j.properties.parameter, K=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const arr=n=>K.map(k=>+p[n][k]);
+    const tmin=arr('T2M_MIN'),tmax=arr('T2M_MAX'),pr=arr('PRECTOTCORR'),rh=arr('RH2M');
+    if(tmin.some(v=>isNaN(v)||v<-90))throw 0;
+    CLIM.tmin=tmin; CLIM.tmax=tmax; CLIM.rh=rh.map(Math.round); CLIM.rain=pr.map((v,i)=>Math.round(v*DAYS[i]));
+    const el=j.geometry&&j.geometry.coordinates&&j.geometry.coordinates[2]; CLIM.refElev=(el&&el>500)?el:TOWN.alt; CLIM.live=true;
+    rerenderIfClimate();
+  }catch(e){ /* sin conexión o sin permiso: valores de referencia */ }
+}
+function erf(x){const t=1/(1+0.3275911*Math.abs(x));const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return x>=0?y:-y;}
+function climFor(alt){
+  const d=-0.0065*(alt-CLIM.refElev);
+  const tmin=CLIM.tmin.map(v=>+(v+d).toFixed(1)), tmax=CLIM.tmax.map(v=>+(v+d).toFixed(1));
+  const frost=tmin.map((t,i)=>Math.round(DAYS[i]*0.5*(1+erf((0-t)/(2.8*Math.SQRT2)))));
+  return {tmin,tmax,frost,rain:CLIM.rain,rh:CLIM.rh};
+}
+
+/* ===== State & storage ===== */
+const KEY='muyuy.v6';
+const S={screen:'welcome',user:'',parcels:[],cur:null,tab:'hoy',contacts:[],done:{},skipPlan:false,
+  draft:[],selV:null,editing:null,quiz:null,phone:'',smsOn:true,smsSent:[],gpsAt:null};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({user:S.user,parcels:S.parcels,phone:S.phone,smsOn:S.smsOn,contacts:S.contacts,done:S.done}));}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){S.user=d.user||'';S.parcels=d.parcels||[];S.phone=d.phone||'';S.smsOn=d.smsOn!==false;S.contacts=d.contacts||[];S.done=d.done||{};}}catch(e){}}
+const curP=()=>S.parcels.find(p=>p.id===S.cur);
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+/* ===== Geometry ===== */
+const M_LAT=110574, M_LNG=lat=>111320*Math.cos(lat*Math.PI/180);
+const off=(c,dx,dy)=>[c.lng+dx/M_LNG(c.lat),c.lat+dy/M_LAT];
+function quadAt(lng,lat,w,h,rot){const c={lng,lat},r=rot*Math.PI/180;return [[-w/2,-h/2],[w/2,-h/2*0.82],[w/2*0.9,h/2],[-w/2,h/2*0.92]].map(([x,y])=>off(c,x*Math.cos(r)-y*Math.sin(r),x*Math.sin(r)+y*Math.cos(r)));}
+function areaHa(poly){const lat0=poly[0][1];let s=0;for(let i=0;i<poly.length;i++){const [x1,y1]=poly[i],[x2,y2]=poly[(i+1)%poly.length];s+=(x1*M_LNG(lat0))*(y2*M_LAT)-(x2*M_LNG(lat0))*(y1*M_LAT);}return Math.abs(s)/2/10000;}
+const centroid=poly=>{let x=0,y=0;poly.forEach(p=>{x+=p[0];y+=p[1];});return [x/poly.length,y/poly.length];};
+function inPoly(pt,poly){let ins=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [xi,yi]=poly[i],[xj,yj]=poly[j];if(((yi>pt[1])!==(yj>pt[1]))&&(pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi))ins=!ins;}return ins;}
+function bbox(polys){let a=[180,90,-180,-90];polys.forEach(p=>p.forEach(([x,y])=>{a[0]=Math.min(a[0],x);a[1]=Math.min(a[1],y);a[2]=Math.max(a[2],x);a[3]=Math.max(a[3],y);}));return [[a[0],a[1]],[a[2],a[3]]];}
+const fmtHa=v=>v<0.1?(v*10000).toFixed(0)+' m²':v.toFixed(2)+' ha';
+const fmtM=v=>Math.round(v).toLocaleString('es-PE')+' m';
+
+/* ===== Elevation from SRTM terrain tiles ===== */
+const DEM_URL='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+const tiles={};
+function tileXY(lng,lat,z){const n=2**z,x=(lng+180)/360*n,r=lat*Math.PI/180,y=(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n;return {x,y};}
+function loadTile(z,x,y){const k=z+'/'+x+'/'+y;if(tiles[k])return tiles[k];
+  tiles[k]=new Promise((res,rej)=>{const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(img,0,0);res(g.getImageData(0,0,256,256).data);}catch(e){rej(e);}};
+    img.onerror=rej;img.src=DEM_URL.replace('{z}',z).replace('{x}',x).replace('{y}',y);setTimeout(()=>rej(new Error('timeout')),8000);});
+  tiles[k].catch(()=>{delete tiles[k];});return tiles[k];}
+async function elev(lng,lat,z=14){const t=tileXY(lng,lat,z),tx=Math.floor(t.x),ty=Math.floor(t.y);const d=await loadTile(z,tx,ty);const px=Math.min(255,Math.floor((t.x-tx)*256)),py=Math.min(255,Math.floor((t.y-ty)*256)),i=(py*256+px)*4;return d[i]*256+d[i+1]+d[i+2]/256-32768;}
+const ASPECT=['el este','el noreste','el norte','el noroeste','el oeste','el suroeste','el sur','el sureste'];
+async function analyze(poly,fallbackAlt){
+  const area=areaHa(poly),[cx,cy]=centroid(poly);
+  try{
+    const bb=bbox([poly]),pts=[];
+    for(let a=0;a<7;a++)for(let b=0;b<7;b++){const p=[bb[0][0]+(bb[1][0]-bb[0][0])*(a+.5)/7,bb[0][1]+(bb[1][1]-bb[0][1])*(b+.5)/7];if(inPoly(p,poly))pts.push(p);}
+    pts.push([cx,cy]);
+    const zs=await Promise.all(pts.map(p=>elev(p[0],p[1])));
+    const X=pts.map(p=>(p[0]-cx)*M_LNG(cy)),Y=pts.map(p=>(p[1]-cy)*M_LAT);
+    const n=pts.length,mz=zs.reduce((a,b)=>a+b,0)/n;let sxx=0,sxy=0,syy=0,sxz=0,syz=0;
+    for(let i=0;i<n;i++){const z=zs[i]-mz;sxx+=X[i]*X[i];sxy+=X[i]*Y[i];syy+=Y[i]*Y[i];sxz+=X[i]*z;syz+=Y[i]*z;}
+    const det=sxx*syy-sxy*sxy,a=det?(sxz*syy-syz*sxy)/det:0,b=det?(syz*sxx-sxz*sxy)/det:0;
+    const slope=Math.max(1,Math.round(Math.hypot(a,b)*100)),ang=Math.atan2(-b,-a);
+    return {area,alt:Math.round(mz),slope,aspect:ASPECT[((Math.round(ang/(Math.PI/4))%8)+8)%8],real:true};
+  }catch(e){return {area,alt:fallbackAlt||3520,slope:12,aspect:'el noreste',real:false};}
+}
+
+/* ===== Dates: everything is computed from today ===== */
+const NOW=new Date(), NM=NOW.getMonth(), NY=NOW.getFullYear();
+const MI=(y,m)=>y*12+m, nowI=MI(NY,NM);
+const mOf=i=>((i%12)+12)%12, yOf=i=>Math.floor(i/12);
+const fmtMY=i=>`${MF[mOf(i)]} ${yOf(i)}`;
+const fmtMYs=i=>`${MONTHS[mOf(i)].toLowerCase()} ${yOf(i)}`;
+const campaign=i=>{const y=yOf(i),s=mOf(i)>=7?y:y-1;return `${s}–${String((s+1)%100).padStart(2,'0')}`;};
+const campStart=()=>NM>=7?NY:NY-1;
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const DOW=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function nextDow(d){const t=new Date(NOW);t.setDate(t.getDate()+(((d-t.getDay())+7)%7||7));return t;}
+const fmtDay=t=>`${DOW[t.getDay()]} ${t.getDate()}`;
+const noAcc=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/°/g,'');
+
+/* ===== Observed anomaly (NASA) and forecast (SENAMHI) =====
+   En producción: ANOM se calcula con GPM IMERG (lluvia de los últimos 30 días vs. el promedio)
+   y SMAP (humedad del suelo). FCST viene del pronóstico diario del SENAMHI. Aquí: valores de ejemplo. */
+const ANOM={rainPct:ANOM_CONFIG.rainPct,soil:ANOM_CONFIG.soilPct<=-10?'más seca de lo normal':ANOM_CONFIG.soilPct>=10?'más húmeda de lo normal':'con humedad normal',period:ANOM_CONFIG.period,live:ANOM_CONFIG.live};
+const FCST={frostDay:nextDow(4),frostDelta:-5,rainDay:nextDow(0),rainMM:35,live:false};
+/* Pronóstico real por parcela: Open-Meteo (gratis, sin clave), ajustado a la altura de la parcela */
+const FC={};
+async function loadForecast(p){
+  if(FC[p.id])return;if(/[?&]demo/.test(location.search)){FC[p.id]={live:false};return;}FC[p.id]={loading:true};
+  const [lng,lat]=centroid(p.poly);
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&elevation=${Math.round(p.stats.alt)}&daily=temperature_2m_min,precipitation_sum&timezone=America%2FLima&forecast_days=7`;
+  try{const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),9000);const r=await fetch(url,{signal:ctl.signal});clearTimeout(to);if(!r.ok)throw 0;const j=await r.json();
+    const days=j.daily.time.map((t,i)=>{const [y,m,d]=t.split('-').map(Number);return {date:new Date(y,m-1,d),tmin:j.daily.temperature_2m_min[i],rain:j.daily.precipitation_sum[i]};}).filter(d=>d.tmin!=null);
+    FC[p.id]={live:true,days};rerenderIfClimate();
+  }catch(e){FC[p.id]={live:false};}
+}
+function fcFor(p){const f=FC[p.id];return f&&f.live?f:null;}
+
+/* ===== Crop stage today ===== */
+const STAGES=['Brotando','Creciendo','Floreciendo','Madurando','Lista para cosechar'];
+function mainKey(p){const c=(p.crops||[]).filter(x=>x!=='Descanso');if(c.includes('Maíz')&&c.includes('Haba'))return 'Maíz con haba';if(c.includes('Avena')&&c.includes('Haba'))return 'Avena + vicia';return c.find(x=>CI[x])||null;}
+function stageOf(p){
+  const key=mainKey(p);if(!key||p.sownI==null)return null;
+  const info=CI[key],el=Math.max(0,nowI-p.sownI),frac=el/info.dur;
+  const idx=frac<.2?0:frac<.45?1:frac<.7?2:frac<1?3:4;
+  return {key,info,el,frac,idx,name:STAGES[idx],harvestI:p.sownI+info.dur,flowerI:p.sownI+Math.round(info.dur*.55),sensitive:idx===0||idx===2};
+}
+
+/* ===== Next sowing: evaluate the farmer's idea, from today ===== */
+const PLAN_OPTS=['Papa','Papa nativa','Maíz','Maíz con haba','Haba','Tarwi','Quinua','Cebada','Avena + vicia','Oca'];
+function earliestI(p){const st=stageOf(p);return st?Math.max(nowI,st.harvestI):nowI;}
+function sowFrom(c,from){const w=CI[c].win;for(let i=from;i<from+24;i++)if(inWin(mOf(i),w))return i;return from;}
+function windowEnd(c,i){let j=i;while(inWin(mOf(j+1),CI[c].win)&&j<i+6)j++;return j;}
+function evalCrop(p,c,ctx){
+  const info=CI[c];if(!info)return null;
+  ctx=ctx||{};
+  const piso=pisoOf(p.stats.alt),cl=climFor(p.stats.alt),suit=(SUIT[piso][c]!=null?SUIT[piso][c]:2);
+  const from=ctx.from!=null?ctx.from:earliestI(p),sow=sowFrom(c,from),harvest=sow+info.dur,flower=sow+Math.round(info.dur*.55);
+  const fN=cl.frost[mOf(flower)],hN=cl.frost[mOf(harvest-1)];
+  let sc=0;const pros=[],cons=[];
+  if(suit===1){sc-=3;cons.push({i:'mountain',t:`Sufre a ${fmtM(p.stats.alt)}: el piso ${PISOS[piso].name} es muy frío para este cultivo.`});}
+  else if(suit===3){sc+=1;pros.push({i:'mountain',t:`Crece bien en el piso ${PISOS[piso].name}.`});}
+  if(info.frost===1&&(fN>=5||hN>=5)){sc-=2;cons.push({i:'snow',t:`Florecería en ${MF[mOf(flower)]}, cuando hay unas ${Math.max(fN,hN)} noches de helada.`});}
+  else if(info.frost===2&&fN>=8){sc-=1;cons.push({i:'snow',t:`Florecería en ${MF[mOf(flower)]} con heladas: siembra al inicio de la temporada.`});}
+  else if(info.frost===3){sc+=1;pros.push({i:'snow',t:'Aguanta bien las heladas.'});}
+  const before=(ctx.before||[...(p.crops||[]),...(p.prev||[])]).filter(x=>x!=='Descanso');
+  const famOf=x=>(CI[x]||{}).fam, parts=c==='Maíz con haba'?['Maíz','Haba']:c==='Avena + vicia'?['Avena']:[c];
+  if(parts.some(x=>before.includes(x))||before.includes(c)){sc-=2;cons.push({i:'bug',t:`Ya sembraste ${parts[0].toLowerCase()} hace poco: repetir cansa el suelo y trae plagas.`});}
+  else if(famOf(c)==='tuber'&&before.some(x=>famOf(x)==='tuber')){sc-=1;cons.push({i:'bug',t:'Tubérculo después de tubérculo: más riesgo de gorgojo de los Andes.'});}
+  if(info.legume&&!before.some(x=>(CI[x]||{}).legume||x==='Haba'||x==='Tarwi')){sc+=2;pros.push({i:'leaf',t:'Devuelve abono natural (nitrógeno) a tu suelo.'});}
+  else if(!info.legume&&before.some(x=>(CI[x]||{}).legume||x==='Haba'||x==='Tarwi')){sc+=1;pros.push({i:'leaf',t:'Aprovecha el abono que dejó la leguminosa que sembraste antes.'});}
+  if(ANOM.rainPct<=-20&&p.water!=='riego'){if(info.water===3){sc-=2;cons.push({i:'drop',t:`Necesita mucha agua y este mes llovió ${-ANOM.rainPct} % menos de lo normal.`});}else if(info.water===1){sc+=1;pros.push({i:'drop',t:'Necesita poca agua: buena opción si sigue seco.'});}}
+  if(p.animals==='si'&&info.forage){sc+=1;pros.push({i:'cow',t:'Da forraje para tus animales.'});}
+  if(p.purpose!=='casa'&&['Quinua','Papa','Haba','Tarwi','Papa nativa'].includes(c)){sc+=.5;pros.push({i:'coins',t:'Tiene mercado para vender.'});}
+  const lvl=sc>=2||(sc>=1&&!cons.length)?3:sc>=0?2:1;
+  return {c,info,lvl,sc,pros,cons,sow,harvest,flower,end:windowEnd(c,sow),from,canNow:sow===nowI};
+}
+function alternatives(p,exclude){return PLAN_OPTS.filter(c=>!exclude.includes(c)).map(c=>evalCrop(p,c)).filter(e=>e&&e.lvl>=2).sort((a,b)=>b.sc-a.sc||a.sow-b.sow).slice(0,3);}
+function nextPlan(p){
+  const mine=p.plan&&CI[p.plan]?evalCrop(p,p.plan):null;
+  const alts=alternatives(p,p.plan?[p.plan]:[]);
+  const next=mine&&mine.lvl>=2?mine:(alts[0]||mine);
+  let after=null;
+  if(next){const tmp=Object.assign({},p,{crops:[next.c],prev:p.crops});const cands=PLAN_OPTS.filter(c=>c!==next.c).map(c=>evalCrop(tmp,c,{from:next.harvest,before:[next.c,...(p.crops||[])]})).filter(Boolean).sort((a,b)=>b.sc-a.sc);after=cands[0]||null;}
+  return {mine,alts,next,after};
+}
+const lvlHTML=n=>{const w=['','No recomendado','Con cuidado','Bien'][n];return `<span class="lvl lvl${n}">${[1,2,3].map(x=>`<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8M12 13C12 9 9 7 5 7c0 4 3 6 7 6zM12 13c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z" fill="${x<=n?'currentColor':'none'}" stroke="currentColor" stroke-width="1.6" opacity="${x<=n?1:.35}"/></svg>`).join('')}<span style="margin-left:4px">${w}</span></span>`;};
+
+/* ===== Alerts: what happens, when, which crop, what to do today ===== */
+function alertsFor(p){
+  const st=stageOf(p),cl=climFor(p.stats.alt),alt=fmtM(p.stats.alt),A=[];
+  const fc=fcFor(p), crop=st?st.key.toLowerCase():null;
+  let tmin,frostDate,rainDate,rainMM;
+  if(fc){const cold=fc.days.reduce((a,b)=>b.tmin<a.tmin?b:a,fc.days[0]);tmin=Math.round(cold.tmin);frostDate=cold.date;
+    const wet=fc.days.reduce((a,b)=>b.rain>a.rain?b:a,fc.days[0]);rainMM=Math.round(wet.rain);rainDate=wet.date;}
+  else{tmin=Math.round(cl.tmin[NM]+FCST.frostDelta);frostDate=FCST.frostDay;rainDate=FCST.rainDay;rainMM=FCST.rainMM;}
+  const srcF=fc?'Pronóstico Open-Meteo, ajustado a tu altura (SRTM)':'Pronóstico de ejemplo + ajuste por altura (SRTM)';
+  if(tmin<=0){
+    const acts=[];
+    if(p.water==='riego')acts.push('Riega ligero en la tarde: la tierra húmeda guarda el calor de noche.');
+    acts.push(st&&st.idx<=1?'Cubre los brotes con paja, rastrojo o mantas viejas antes de que oscurezca.':'Cubre las plantas más débiles y tus almácigos con paja o mantas.');
+    acts.push('Antes del amanecer, prende humo con rastrojo húmedo a favor del viento, como se hace tradicionalmente.');
+    if(st&&st.idx===3)acts.push('Si ya está madura, adelanta la cosecha antes de la helada.');
+    const sev=tmin<=-2?'alta':'media';
+    A.push({k:'frost',icon:'snow',sev,when:`${cap(fmtDay(frostDate))}, de madrugada`,title:`Helada: hasta ${tmin} °C`,
+      what:`Pronóstico ajustado a los ${alt} de tu parcela.`,
+      affects:st?`Tu ${crop} está ${st.name.toLowerCase()}${st.sensitive?': es la etapa más sensible al frío.':'.'}`:'No tienes cultivo ahora: protege tus almácigos y animales.',
+      actions:acts,src:srcF,
+      sms:noAcc(`MUYUY: Helada el ${fmtDay(frostDate)} (${tmin}C) en ${p.name}.${st&&st.sensitive?' Tu '+crop+' esta sensible.':''} Cubre con paja y prende humo antes del amanecer.`),
+      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Helada el ${fmtDay(frostDate)} hasta ${tmin}C en las partes altas. Protejamos almacigos y chacras esa noche.`)});
+  }
+  if(fc?rainMM>=15:(NM>=9||NM<=2)){
+    A.push({k:'rain',icon:'rain',sev:p.stats.slope>=15?'alta':'media',when:cap(fmtDay(rainDate)),title:`Lluvia fuerte: unos ${rainMM} mm`,
+      what:'Un día de lluvia intensa.',affects:p.stats.slope>=12?`Tu parcela tiene ${p.stats.slope} % de pendiente: el agua puede llevarse la tierra.`:'Tu parcela es casi plana: revisa que el agua pueda salir.',
+      actions:['Limpia zanjas y canales antes de ese día.',p.stats.slope>=12?'Abre o refuerza surcos en curva de nivel para frenar el agua.':'Abre una salida para que el agua no se empoce.','No dejes tierra recién removida sin cubrir.'],
+      src:fc?'Pronóstico Open-Meteo + pendiente (SRTM)':'Pronóstico de ejemplo + pendiente (SRTM)',
+      sms:noAcc(`MUYUY: Lluvia fuerte el ${fmtDay(rainDate)} (${rainMM}mm) en ${p.name}. Limpia zanjas y canales para que no se lave la tierra.`),
+      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Lluvia fuerte el ${fmtDay(rainDate)}. Limpiemos juntos canales y zanjas comunales.`)});
+  }
+  if(ANOM.rainPct<=-20){
+    A.push({k:'dry',icon:'drop',sev:'media',when:`Este mes (${MF[NM]})`,title:`Llovió ${-ANOM.rainPct} % menos de lo normal`,
+      what:`Los satélites ven tu zona ${ANOM.soil} para ${MF[NM]}.`,
+      affects:st?(st.info.water>=2?`Tu ${crop} necesita agua constante: cuida la humedad.`:`Tu ${crop} aguanta bien la falta de agua.`):'Buen momento para planear una siembra que necesite poca agua.',
+      actions:[p.water==='riego'?'Riega temprano en la mañana, cuando se pierde menos agua.':'Cubre el suelo con paja o rastrojo para guardar la humedad.','Para tu próxima siembra, prefiere cultivos de poca agua: quinua, tarwi o cebada.','Revisa la pestaña Siembra: ya ajustamos las opciones a este año más seco.'],
+      src:'GPM IMERG (lluvia) + SMAP (humedad del suelo)',
+      sms:noAcc(`MUYUY: Este mes llovio ${-ANOM.rainPct}% menos de lo normal en ${p.name}. Cubre el suelo con paja para guardar humedad.`),
+      comm:noAcc(`MUYUY: Aviso para la comunidad de Chiara. Este mes llovio ${-ANOM.rainPct}% menos de lo normal. Cuidemos el agua de riego.`)});
+  }
+  if(st&&st.idx>=3)A.push({k:'task',icon:'cal',sev:'baja',when:cap(fmtMY(st.harvestI)),title:`Cosecha de ${crop}`,what:'Se acerca el tiempo de cosecha.',affects:`Tu ${crop} está ${st.name.toLowerCase()}.`,actions:['Prepara sacos y espacio seco para guardar.','Si se anuncia helada, adelanta la cosecha.'],src:'Calendario de tu cultivo',sms:noAcc(`MUYUY: Se acerca la cosecha de ${crop} en ${p.name}.`),comm:''});
+  return A;
+}
+const SEV={alta:{l:'Alerta alta',c:'#B42318',bg:'#FEE4E2'},media:{l:'Atención',c:'#8A5A00',bg:'#FFF1CC'},baja:{l:'Aviso',c:'#1F7A4D',bg:'#E1F1E7'}};
+
+/* ===== Map ===== */
+let map=null,mapReady=false,spin=null,townMarker=null,meMarker=null,pMarkers=[],vMarkers=[],mMarkers=[],yearTimer=null;
+function initMap(){
+  const fail=()=>$('#stage').classList.add('nomap');
+  if(!window.maplibregl){fail();return;}
+  try{
+    map=new maplibregl.Map({container:'map',center:[TOWN.lng,TOWN.lat],zoom:12.2,pitch:66,bearing:-25,maxPitch:80,attributionControl:{compact:true},
+      style:{version:8,
+        sources:{
+          sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:16,attribution:'Imagen © Esri, Maxar, Earthstar Geographics'},
+          dem:{type:'raster-dem',tiles:[DEM_URL],encoding:'terrarium',tileSize:256,maxzoom:14,attribution:'Relieve: SRTM/NASADEM (NASA) vía AWS Terrain Tiles'},
+          hs:{type:'raster-dem',tiles:[DEM_URL],encoding:'terrarium',tileSize:256,maxzoom:14}},
+        layers:[{id:'sat',type:'raster',source:'sat'},{id:'hill',type:'hillshade',source:'hs',paint:{'hillshade-shadow-color':'#2b2418','hillshade-highlight-color':'#fff8e6','hillshade-exaggeration':0.2}}],
+        terrain:{source:'dem',exaggeration:1.45}}});
+    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+    map.on('load',()=>{
+      mapReady=true;
+      try{if(map.setSky)map.setSky({'sky-color':'#A9CBE0','horizon-color':'#E9E3D3','fog-color':'#E9E3D3','sky-horizon-blend':0.6,'horizon-fog-blend':0.7,'fog-ground-blend':0.35});}catch(e){}
+      const E={type:'FeatureCollection',features:[]};
+      map.addSource('parcels',{type:'geojson',data:E});map.addSource('draft',{type:'geojson',data:E});
+      map.addLayer({id:'p-fill',type:'fill',source:'parcels',paint:{'fill-color':['get','color'],'fill-opacity':['get','op']}});
+      map.addLayer({id:'p-halo',type:'line',source:'parcels',paint:{'line-color':'#fff','line-width':['case',['get','sel'],5,3]}});
+      map.addLayer({id:'p-line',type:'line',source:'parcels',paint:{'line-color':['case',['get','sel'],'#C2522A','#2F5D3A'],'line-width':2.2}});
+      map.addLayer({id:'d-fill',type:'fill',source:'draft',filter:['==','$type','Polygon'],paint:{'fill-color':'#C2522A','fill-opacity':0.18}});
+      map.addLayer({id:'d-line',type:'line',source:'draft',paint:{'line-color':'#fff','line-width':3,'line-dasharray':[2,1.4]}});
+      const el=document.createElement('div');el.className='town-marker';el.textContent='Chiara';
+      townMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([TOWN.lng,TOWN.lat]).addTo(map);
+      map.on('click',e=>{
+        if(e.originalEvent&&e.originalEvent.target&&e.originalEvent.target.closest&&e.originalEvent.target.closest('.vtx,.mid,.parcel-marker'))return;
+        if(S.screen==='draw'){S.draft.push([e.lngLat.lng,e.lngLat.lat]);S.selV=null;drawDraft(true);render();}
+      });
+      map.on('click','p-fill',e=>{if(['parcels','parcel'].includes(S.screen)&&e.features[0]){openParcel(e.features[0].properties.id);}});
+      syncMap(true);
+    });
+    ['mousedown','touchstart','wheel'].forEach(ev=>map.on(ev,()=>{if(spin){clearInterval(spin);spin=null;}}));
+    setTimeout(()=>{if(!mapReady)fail();},15000);
+  }catch(e){fail();}
+}
+function fly(o){if(mapReady)map.flyTo(Object.assign({speed:0.9,curve:1.4,essential:true},o));}
+function fitPolys(polys,o){if(!mapReady||!polys.length)return;const mob=innerWidth<900;map.fitBounds(bbox(polys),Object.assign({padding:mob?{top:70,bottom:70,left:50,right:50}:130,pitch:60,bearing:map.getBearing(),maxZoom:17,duration:2000},o||{}));}
+function setParcelsLayer(onlyId,colorOverride){
+  if(!mapReady)return;
+  pMarkers.forEach(m=>m.remove());pMarkers=[];
+  const list=S.parcels.filter(p=>!onlyId||p.id===onlyId);
+  map.getSource('parcels').setData({type:'FeatureCollection',features:list.map(p=>({type:'Feature',properties:{id:p.id,sel:p.id===S.cur,color:colorOverride&&p.id===onlyId?colorOverride:PISOS[pisoOf(p.stats.alt)].col,op:colorOverride&&p.id===onlyId?0.7:0.42},geometry:{type:'Polygon',coordinates:[[...p.poly,p.poly[0]]]}}))});
+  list.forEach(p=>{const el=document.createElement('div');el.className='parcel-marker'+(p.id===S.cur&&S.screen==='parcel'?' sel':'');el.id='pm-'+p.id;
+    el.innerHTML=`<span class="pi" style="background:${PISOS[pisoOf(p.stats.alt)].col}">${icm('sprout',13)}</span><span class="pt">${p.name}</span>`;
+    el.addEventListener('click',ev=>{ev.stopPropagation();openParcel(p.id);});
+    pMarkers.push(new maplibregl.Marker({element:el,anchor:'bottom',offset:[0,-8]}).setLngLat(centroid(p.poly)).addTo(map));});
+}
+function clearHandles(){vMarkers.forEach(m=>m.remove());mMarkers.forEach(m=>m.remove());vMarkers=[];mMarkers=[];}
+function drawDraft(rebuild){
+  if(!mapReady)return;
+  const d=S.draft,f=[];
+  if(d.length>=3)f.push({type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[[...d,d[0]]]}});
+  else if(d.length===2)f.push({type:'Feature',properties:{},geometry:{type:'LineString',coordinates:d}});
+  map.getSource('draft').setData({type:'FeatureCollection',features:f});
+  if(rebuild){
+    clearHandles();
+    d.forEach((pt,i)=>{const el=document.createElement('div');el.className='vtx'+(S.selV===i?' sel':'');el.setAttribute('aria-label','Punto '+(i+1));
+      const m=new maplibregl.Marker({element:el,draggable:true}).setLngLat(pt).addTo(map);
+      m.on('drag',()=>{const ll=m.getLngLat();S.draft[i]=[ll.lng,ll.lat];drawDraft(false);moveMids();});
+      m.on('dragend',()=>updateDrawStats());
+      el.addEventListener('click',ev=>{ev.stopPropagation();S.selV=S.selV===i?null:i;drawDraft(true);render();});
+      vMarkers.push(m);});
+    if(d.length>=3)d.forEach((pt,i)=>{const nx=d[(i+1)%d.length],el=document.createElement('div');el.className='mid';el.textContent='+';el.title='Agregar un punto aquí';
+      const m=new maplibregl.Marker({element:el}).setLngLat([(pt[0]+nx[0])/2,(pt[1]+nx[1])/2]).addTo(map);
+      el.addEventListener('click',ev=>{ev.stopPropagation();const ll=m.getLngLat();S.draft.splice(i+1,0,[ll.lng,ll.lat]);S.selV=i+1;drawDraft(true);render();});
+      mMarkers.push(m);});
+  }
+  $('#finishBtn').disabled=d.length<3;
+}
+function moveMids(){const d=S.draft;mMarkers.forEach((m,i)=>{const a=d[i],b=d[(i+1)%d.length];if(a&&b)m.setLngLat([(a[0]+b[0])/2,(a[1]+b[1])/2]);});}
+function updateDrawStats(){const el=$('#drawArea');if(el)el.textContent=S.draft.length>2?fmtHa(areaHa(S.draft)):'—';const n=$('#drawN');if(n)n.textContent=S.draft.length;}
+function startSpin(){if(!mapReady||spin)return;spin=setInterval(()=>{if(S.screen!=='welcome'){clearInterval(spin);spin=null;return;}map.setBearing(map.getBearing()+0.06);},30);}
+function syncMap(first){
+  if(!mapReady)return;
+  clearInterval(yearTimer);
+  const scr=S.screen;
+  if(scr!=='draw'){clearHandles();map.getSource('draft').setData({type:'FeatureCollection',features:[]});}
+  if(scr==='welcome'){setParcelsLayer();fly({center:[TOWN.lng,TOWN.lat],zoom:12.2,pitch:66,bearing:map.getBearing()});startSpin();}
+  else if(scr==='parcels'){setParcelsLayer();if(S.parcels.length)fitPolys(S.parcels.map(p=>p.poly),{maxZoom:15.2,pitch:58});else fly({center:[TOWN.lng,TOWN.lat],zoom:13.2,pitch:62});}
+  else if(scr==='locate'){setParcelsLayer();if(!S.gpsAt)fly({center:[TOWN.lng,TOWN.lat],zoom:14.3,pitch:55,bearing:-15});}
+  else if(scr==='draw'){setParcelsLayer();drawDraft(true);if(S.draft.length>=3)fitPolys([S.draft],{pitch:35,maxZoom:17.5});}
+  else if(scr==='quiz'||scr==='analyzing'){const p=S.quiz;setParcelsLayer(p&&p.id);if(p)fitPolys([p.poly],{pitch:58});}
+  else if(scr==='parcel'){const p=curP();if(!p)return;setParcelsLayer(p.id);fitPolys([p.poly],{pitch:62});if(S.tab==='siembra')startYears(p);}
+}
+function startYears(p){
+  clearInterval(yearTimer);const st=stageOf(p),np=nextPlan(p),rows=[];
+  if(st)rows.push({l:'Ahora',c:st.key});if(np.next)rows.push({l:'Próxima',c:np.next.c});if(np.after)rows.push({l:'Después',c:np.after.c});
+  if(!rows.length)return;let y=0;
+  const tick=()=>{const r=rows[y];setParcelsLayer(p.id,CROP_COL[r.c]);const el=document.querySelector('#pm-'+p.id+' .pt');if(el)el.textContent=r.l+': '+r.c;
+    document.querySelectorAll('.camp').forEach((n,i)=>n.classList.toggle('live',i===y));legendCycle(rows,y);y=(y+1)%rows.length;};
+  tick();yearTimer=setInterval(tick,1900);
+}
+
+/* ===== Overlays ===== */
+function setTop(html,dark){const o=$('#ovTop');if(!html){o.classList.add('hidden');return;}o.innerHTML=`<span class="pill ${dark?'dark':''}">${html}</span>`;o.classList.remove('hidden');}
+function legendCycle(rows,y){const o=$('#ovLegend');o.innerHTML=`<div class="legend"><b>Tu parcela en el tiempo</b>${rows.map((r,i)=>`<div class="row ${i===y?'':'dim'}"><i style="background:${CROP_COL[r.c]||'#999'}"></i>${r.l}: ${r.c}</div>`).join('')}</div>`;o.classList.remove('hidden');}
+function legendPisos(){const o=$('#ovLegend');o.innerHTML=`<div class="legend"><b>Piso de altura</b>${Object.values(PISOS).map(p=>`<div class="row"><i style="background:${p.col}"></i>${p.name}, ${p.range}</div>`).join('')}</div>`;o.classList.remove('hidden');}
+function updateOverlays(){
+  const scr=S.screen;$('#ovDraw').classList.toggle('hidden',scr!=='draw');
+  if(scr==='welcome'){setTop(`${ic('sat',16)} Chiara, Ayacucho, relieve real 3D`);$('#ovLegend').classList.add('hidden');}
+  else if(scr==='parcels'){setTop(S.parcels.length?`${ic('pin',16)} Tus parcelas, toca una para abrirla`:`${ic('sat',16)} Chiara, relieve real 3D`);S.parcels.length?legendPisos():$('#ovLegend').classList.add('hidden');}
+  else if(scr==='locate'){setTop(S.gpsAt?`${ic('target',16)} Estás aquí`:`Busca tu parcela: arrastra y acerca el mapa`,!!S.gpsAt);$('#ovLegend').classList.add('hidden');}
+  else if(scr==='draw'){setTop(S.draft.length<3?`Toca las esquinas de tu parcela (${S.draft.length} de al menos 3)`:`Arrastra los puntos para ajustar. El «+» agrega un punto`,true);$('#ovLegend').classList.add('hidden');}
+  else if(scr==='parcel'){const p=curP();if(!p)return;if(S.tab==='siembra')return;const A=alertsFor(p)[0];
+    setTop(A&&S.tab!=='datos'?`${ic(A.icon,16)} ${A.title}, ${A.when.toLowerCase()}`:`${ic('mountain',16)} ${p.name}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}`);legendPisos();}
+  else {setTop('');$('#ovLegend').classList.add('hidden');}
+}
+
+/* ===== UI pieces ===== */
+const guide=t=>`<div class="guide"><div class="avatar">${ic('sprout',22)}</div><div class="bubble"><div class="txt">${t}</div><button class="listen" data-act="speak" aria-label="Escuchar">${icm('speaker',17)}</button></div></div>`;
+const primary=(label,act,dis,icon='')=>`<button class="btn btn-primary" data-act="${act}" ${dis?'disabled':''}>${icon&&icon!=='arrow'?ic(icon,20):''}${label}</button>`;
+const seg=(k,opts,val)=>`<div class="seg" role="group">${opts.map(o=>`<button data-act="set" data-k="${k}" data-v="${o[0]}" aria-pressed="${val===o[0]}">${o[2]?ic(o[2],17):''}${o[1]}</button>`).join('')}</div>`;
+function climateChart(cl){
+  const W=360,H=170,base=118,tMin=-6,tMax=24,ty=t=>12+(tMax-t)/(tMax-tMin)*(base-12);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Lluvia, temperatura mínima y máxima, y humedad por mes">`;
+  s+=`<rect x="0" y="${ty(0)}" width="${W}" height="${base-ty(0)}" fill="#ECEAFB" opacity=".8"/><text x="4" y="${ty(0)+11}" font-size="9.5" font-weight="700" fill="#5144C9" font-family="Atkinson Hyperlegible,sans-serif">bajo 0 °C = helada</text>`;
+  s+=`<line x1="0" y1="${ty(0)}" x2="${W}" y2="${ty(0)}" stroke="#5144C9" stroke-dasharray="3 3" stroke-width="1"/>`;
+  s+=`<rect x="${NM*30}" y="4" width="30" height="${base+34}" rx="6" fill="#18232E" opacity=".06"/>`;
+  for(let i=0;i<12;i++){const h=cl.rain[i]/150*70;s+=`<rect x="${i*30+8}" y="${base-h}" width="14" height="${h}" rx="3" fill="#8DBEDC"/>`;}
+  const line=(arr,col)=>`<polyline fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${arr.map((t,i)=>`${i*30+15},${ty(t).toFixed(1)}`).join(' ')}"/>`+arr.map((t,i)=>`<circle cx="${i*30+15}" cy="${ty(t).toFixed(1)}" r="3" fill="#fff" stroke="${col}" stroke-width="2"/>`).join('');
+  s+=line(cl.tmax,'#D9783B')+line(cl.tmin,'#5144C9');
+  for(let i=0;i<12;i++){s+=`<text x="${i*30+15}" y="${base+16}" text-anchor="middle" font-size="10" font-weight="700" fill="${i===NM?'#18232E':'#55606B'}" font-family="Atkinson Hyperlegible,sans-serif">${MONTHS[i]}</text>`;
+    s+=`<text x="${i*30+15}" y="${base+34}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1662C4" font-family="Atkinson Hyperlegible,sans-serif">${cl.rh[i]}%</text>`;}
+  return s+'</svg>';
+}
+function shade(hex,s){const n=parseInt(hex.slice(1),16);return `rgb(${((n>>16)&255)*s|0},${((n>>8)&255)*s|0},${(n&255)*s|0})`;}
+function mix(a,b,t){const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);const ch=k=>Math.round(((A>>k)&255)+(((B>>k)&255)-((A>>k)&255))*t);return `rgb(${ch(16)},${ch(8)},${ch(0)})`;}
+function profileSVG(){
+  const W=360,H=170,A0=2800,A1=4400,y=a=>14+(A1-a)/(A1-A0)*(H-28);
+  const ridge=x=>A0+(A1-A0-140)*Math.pow(x/W,1.12)+60*Math.sin(x/34)+35*Math.sin(x/13+1);
+  const pts=[];for(let x=0;x<=W;x+=4)pts.push([x,y(ridge(x))]);
+  const xAt=a=>{let b=0,bd=1e9;for(let x=0;x<=W;x+=2){const d=Math.abs(ridge(x)-a);if(d<bd){bd=d;b=x;}}return b;};
+  const area=`M0 ${H} L${pts.map(p=>p[0]+' '+p[1].toFixed(1)).join(' L')} L${W} ${H} Z`;
+  const bands=[['puna',4000,4400],['suni',3500,4000],['quechua',2800,3500]];
+  let s=`<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Perfil de altura de Chiara con tus parcelas"><defs><clipPath id="rc"><path d="${area}"/></clipPath></defs><g clip-path="url(#rc)">`;
+  bands.forEach(([k,lo,hi])=>{s+=`<rect x="0" y="${y(hi)}" width="${W}" height="${y(lo)-y(hi)}" fill="${PISOS[k].col}"/>`;});
+  bands.forEach(([k,lo])=>{s+=`<line x1="0" x2="${W}" y1="${y(lo)}" y2="${y(lo)}" stroke="#fff" stroke-opacity=".5" stroke-dasharray="3 4"/>`;});
+  s+=`</g><polyline points="${pts.map(p=>p[0]+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="#18232E" stroke-width="1.5" stroke-opacity=".55"/>`;
+  bands.forEach(([k,lo,hi])=>{const yy=(y(lo)+y(Math.min(hi,ridge(W)-20)))/2;s+=`<text x="${W-8}" y="${yy+4}" text-anchor="end" font-size="12" font-weight="700" fill="#fff" font-family="Atkinson Hyperlegible,sans-serif">${PISOS[k].name}</text>`;});
+  const lab=(x,yy,t,sub,col)=>`<circle cx="${x}" cy="${yy}" r="6" fill="${col}" stroke="#fff" stroke-width="2.5"/><text x="${x+10}" y="${yy-8}" font-size="12.5" font-weight="700" fill="#18232E" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="Atkinson Hyperlegible,sans-serif">${t}</text>${sub?`<text x="${x+10}" y="${yy+6}" font-size="11" fill="#18232E" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="Atkinson Hyperlegible,sans-serif">${sub}</text>`:''}`;
+  const cx=xAt(TOWN.alt),cy=y(TOWN.alt);s+=`<circle cx="${cx}" cy="${cy}" r="4.5" fill="#18232E" stroke="#fff" stroke-width="2"/><line x1="${cx}" y1="${cy+5}" x2="${cx}" y2="${cy+22}" stroke="#fff" stroke-width="1.5"/><text x="${cx}" y="${cy+35}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff" font-family="Atkinson Hyperlegible,sans-serif">Chiara (pueblo)</text>`;
+  S.parcels.slice().sort((a,b)=>a.stats.alt-b.stats.alt).forEach(p=>{const x=xAt(p.stats.alt);s+=lab(Math.min(x,W-110),y(p.stats.alt),p.name,fmtM(p.stats.alt),alertsFor(p).some(a=>a.k==='frost')?'#5144C9':'#C8361B');});
+  return s+'</svg>';
+}
+function stageBar(st){
+  const segs=[['Brota',.2],['Crece',.25],['Florece',.25],['Madura',.3]],col=CROP_COL[st.key]||'#6FA35A';
+  const pos=Math.min(100,st.frac*100);
+  return `<div class="sbar">${segs.map(([l,w],i)=>`<div class="sseg ${i===st.idx?'on':''}" style="flex:${w};background:${i===st.idx?col:mix(col,'#ffffff',.62)}"><span>${l}</span></div>`).join('')}<span class="smark" style="left:${pos}%"><b>Hoy</b></span></div>
+  <div class="sdates"><span>Sembrado en ${fmtMYs(nowI-st.el)}</span><span>Cosecha aprox. ${fmtMYs(st.harvestI)}</span></div>`;
+}
+function alertCard(a,i,full){
+  const sv=SEV[a.sev]||SEV.media;
+  return `<article class="acard ${a.k}"><div class="ahead"><span class="ai">${ic(a.icon,26)}</span><div style="flex:1;min-width:0"><span class="sev" style="background:${sv.bg};color:${sv.c}">${sv.l}</span><span class="when">${a.when}</span><b class="at">${a.title}</b></div></div>
+    <p class="aw">${a.what}</p>${a.affects?`<p class="aff">${a.affects}</p>`:''}
+    ${full?`<h4 class="adoh">Qué hacer</h4><ul class="todo">${a.actions.map((t,j)=>`<li><label><input type="checkbox" data-done="${i}-${j}" ${S.done[curP().id+'-'+a.k+'-'+j]?'checked':''}><span>${t}</span></label></li>`).join('')}</ul>
+    <span class="tag sat">${ic('sat',13)} ${a.src}</span>
+    <div class="btn-row" style="margin-top:12px"><button class="btn btn-ghost" data-act="smsAlert" data-i="${i}">${ic('sms',18)} Enviarme SMS</button>${a.comm?`<button class="btn btn-ghost" data-act="commAlert" data-i="${i}">${ic('user',18)} Avisar a mi comunidad</button>`:'<span></span>'}</div>`
+    :`<ul class="todo short">${a.actions.slice(0,2).map(t=>`<li>${t}</li>`).join('')}</ul><button class="link-btn" data-act="tab" data-v="avisos">Ver todo lo que puedo hacer</button>`}
+  </article>`;
+}
+function cropPicker(act,list,selected,multi){
+  return `<div class="crops">${list.map(c=>`<button class="crop" data-act="${act}" data-v="${c}" aria-pressed="${multi?selected.includes(c):selected===c}"><span class="chk">${icm('check',12,3)}</span>${art(c,46)}${c==='Descanso'?'Nada (descanso)':c}</button>`).join('')}</div>`;
+}
+
+/* ===== Screens ===== */
+const CROP_LIST=['Papa','Papa nativa','Maíz','Haba','Quinua','Tarwi','Cebada','Avena','Oca','Pastos','Descanso'];
+const V={
+welcome(){return {html:`
+  <p class="eyebrow">Chiara, Ayacucho</p>
+  <h1 class="title">Te avisamos antes de la helada o la sequía, parcela por parcela</h1>
+  <p class="lead">Muyuy usa satélites de la NASA y el pronóstico del SENAMHI para avisarte a tiempo y decirte qué hacer con lo que tienes sembrado.</p>
+  <div class="how3"><div><span class="hi">${ic('pin',22)}</span>Marca tus parcelas</div><div><span class="hi">${ic('bell',22)}</span>Te avisamos y te decimos qué hacer</div><div><span class="hi">${ic('sprout',22)}</span>Te ayudamos con la próxima siembra</div></div>
+  <div class="card"><label for="uname" class="ql">¿Cómo te llamas?</label><span class="qh">Para saludarte. No necesitas cuenta.</span><input id="uname" class="input" placeholder="Ej. Rosa" value="${S.user}" maxlength="24" autocomplete="given-name"></div>
+  <div class="card"><span class="ql" style="margin-bottom:10px">Idioma</span>${seg('lang',[['es','Español'],['qu','Runasimi']],'es')}</div>`,
+  cta:primary('Empezar','start')};},
+
+parcels(){
+  const n=S.parcels.length,tot=S.parcels.reduce((a,p)=>a+p.stats.area,0);
+  const anom=`<div class="anom">${ic('sat',22)}<div><b>Este mes llovió ${-ANOM.rainPct} % menos de lo normal en Chiara</b><span>Satélites GPM y SMAP, ${ANOM.period}</span></div></div>`;
+  if(!n) return {html:`
+    ${guide(`Hola${S.user?' '+S.user:''}. Agrega tus parcelas y te avisaremos antes de una helada, lluvia fuerte o sequía.`)}
+    <h1 class="title">Mis parcelas</h1>
+    <div class="card empty">${profileSVG()}
+      <b style="font-size:16px">Todavía no tienes parcelas</b><p class="lead" style="margin:6px 0 0">Puedes tener varias: para tu casa o para vender, a distinta altura.</p></div>
+    <button class="option" data-act="demoRosa"><span class="oi">${ic('user',22)}</span><div><b>Ver el ejemplo de Doña Rosa</b><span>2 parcelas en Chiara, a distinta altura</span></div></button>`,
+    cta:primary('Agregar mi primera parcela','add',false,'plus')};
+  const all=[];S.parcels.forEach(p=>alertsFor(p).filter(a=>a.k!=='dry'&&a.k!=='task').forEach(a=>all.push({p,a})));
+  all.sort((x,y)=>(x.a.sev==='alta'?0:1)-(y.a.sev==='alta'?0:1));
+  return {html:`
+    <p class="eyebrow">Hola${S.user?', '+S.user:''}</p>
+    <h1 class="title">Mis parcelas</h1>
+    <p class="lead" style="margin-bottom:12px">${n} ${n===1?'parcela':'parcelas'}, ${fmtHa(tot)} en total</p>
+    ${anom}
+    ${profileSVG()}
+    <div class="cwrap"><button class="cnav prev" data-act="cprev" aria-label="Parcela anterior" disabled>${icm('left',20)}</button><button class="cnav next" data-act="cnext" aria-label="Parcela siguiente">${icm('right',20)}</button><div class="carousel" id="carousel">${S.parcels.map(p=>{const PI=PISOS[pisoOf(p.stats.alt)],st=stageOf(p),A=alertsFor(p)[0],np=nextPlan(p);return `
+      <button class="pcard ${p.id===S.cur?'cur':''}" data-act="open" data-id="${p.id}" data-pid="${p.id}">
+        <div class="band" style="background:linear-gradient(135deg,${PI.col}33,${PI.col}88)">${p.crops.slice(0,3).map(c=>art(c,48)).join('')}<span class="piso">${PI.name}, ${fmtM(p.stats.alt)}</span></div>
+        <div class="bd"><div class="nm">${p.name}</div><div class="meta">${st?`${st.key}, ${st.name.toLowerCase()}`:'En descanso'}, ${fmtHa(p.stats.area)}</div>
+        ${A?`<div class="al sev-${A.sev}">${ic(A.icon,18)} ${A.title}, ${A.when.split(',')[0].toLowerCase()}</div>`:`<div class="al">${ic('check',18)} Sin alertas esta semana</div>`}
+        ${np.next?`<div class="al" style="margin-top:6px">${ic('sprout',18)} Próxima siembra: ${np.next.c.toLowerCase()}, desde ${fmtMYs(np.next.sow)}</div>`:''}</div>
+      </button>`;}).join('')}
+      <button class="add-card" data-act="add"><span class="plus">${icm('plus',26)}</span>Agregar parcela</button>
+    </div></div><div class="dots" id="dots">${S.parcels.map((p,i)=>`<button data-act="cgo" data-i="${i}" aria-label="Ver ${p.name}"><i class="${(S.cur?p.id===S.cur:i===0)?'on':''}"></i></button>`).join('')}<button data-act="cgo" data-i="${S.parcels.length}" aria-label="Agregar parcela"><i></i></button></div>
+    <h2 class="sec">Alertas de esta semana</h2>
+    ${all.length?all.map(({p,a})=>`<button class="alert ${a.k}" data-act="openAlert" data-id="${p.id}"><span class="ai">${ic(a.icon,22)}</span><div><span class="when">${a.when}, ${p.name}</span><b>${a.title}</b><span class="tx">${a.affects}</span></div></button>`).join(''):'<p class="lead">Sin alertas esta semana.</p>'}
+    <div class="card" style="display:flex;gap:12px;align-items:center"><span class="oi" style="width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:#fff;box-shadow:inset 0 0 0 1px #E6EBE8">${ic('sms',26)}</span>
+      <div style="flex:1;font-size:15px;line-height:1.4"><b>${S.smsOn&&S.phone?'Alertas por SMS activas':'Recibe las alertas por SMS'}</b><br><span style="color:var(--muted)">${S.smsOn&&S.phone?`A tu número y ${S.contacts.length} ${S.contacts.length===1?'contacto':'contactos'}`:'Funciona en cualquier celular, sin internet'}</span></div>
+      <button class="btn btn-ghost" data-act="openSms" style="min-height:44px;padding:0 14px">${S.phone?'Ver':'Activar'}</button></div>`,
+    cta:''};
+},
+
+locate(){return {html:`${flowBack()}
+  ${guide(S.gpsAt?'Te encontré. <b>Toca las esquinas de tu parcela</b> en el mapa.':'Vamos a ubicar tu parcela. ¿Cómo prefieres hacerlo?')}
+  <p class="eyebrow">Nueva parcela, paso 1 de 2</p><h1 class="title">¿Dónde está tu parcela?</h1>
+  <p class="lead">Este es el relieve real de Chiara. Puedes girarlo y acercarlo.</p>
+  <button class="option" data-act="gps"><span class="oi">${ic('target',22)}</span><div><b>Estoy en mi parcela</b><span>Uso la ubicación de mi celular y acerco el mapa</span></div></button>
+  <button class="option" data-act="draw"><span class="oi">${ic('draw',22)}</span><div><b>Buscarla y dibujarla</b><span>Muevo el mapa y toco sus esquinas</span></div></button>`,cta:''};},
+
+draw(){const n=S.draft.length;return {html:`${flowBack()}
+  ${guide(n<3?'Toca en el mapa <b>cada esquina</b> de tu parcela, una por una.':'¡Bien! <b>Arrastra los puntos</b> si quedaron mal. El «+» agrega un punto entre dos esquinas.')}
+  <p class="eyebrow">${S.editing?'Editar parcela':'Nueva parcela, paso 1 de 2'}</p><h1 class="title">${S.editing?'Ajusta la forma':'Dibuja tu parcela'}</h1>
+  <div class="card"><div class="kv"><div><div class="k">Puntos</div><div class="v" id="drawN">${n}</div></div><div><div class="k">Tamaño</div><div class="v" id="drawArea">${n>2?fmtHa(areaHa(S.draft)):'—'}</div></div></div></div>
+  ${S.selV!=null?`<div class="card" style="display:flex;align-items:center;gap:10px;justify-content:space-between"><span style="font-weight:700;font-size:15px">Punto ${S.selV+1} seleccionado</span><button class="btn btn-danger" data-act="delV" ${n<=3?'disabled':''} style="min-height:44px">${icm('trash',17)} Quitar punto</button></div>`:''}
+  <p class="small">Acerca el mapa con dos dedos o la rueda del mouse. Toca un punto para seleccionarlo.</p>`,
+  cta:`<div class="btn-row"><button class="btn btn-ghost" data-act="undo" ${n?'':'disabled'}>Deshacer</button><button class="btn btn-ghost" data-act="clearDraw" ${n?'':'disabled'}>Borrar todo</button></div>${primary(S.editing?'Guardar forma':'Listo, siguiente','finishDraw',n<3)}`};},
+
+analyzing(){return {html:`<div class="loading"><div class="spinner"></div><div>Midiendo tu parcela con los satélites de la NASA…</div>
+  <ul class="steps-check" id="anSteps"><li><span class="d">${icm('check',13,3)}</span>Tamaño de la parcela</li><li><span class="d">${icm('check',13,3)}</span>Altura y piso (SRTM)</li><li><span class="d">${icm('check',13,3)}</span>Pendiente del terreno</li><li><span class="d">${icm('check',13,3)}</span>Clima del lugar (NASA POWER)</li></ul></div>`,cta:''};},
+
+quiz(){
+  const q=S.quiz,st=q.stats,PI=PISOS[pisoOf(st.alt)],rest=q.crops.includes('Descanso');
+  const months=[];for(let k=11;k>=0;k--)months.push(nowI-k);
+  const ok=q.crops.length&&(rest||q.sownI!=null)&&q.prev.length;
+  return {html:`${flowBack()}
+  <div class="card" style="display:flex;gap:12px;align-items:center;border-color:${PI.col}"><span style="width:52px;height:52px;border-radius:14px;background:${PI.col};display:grid;place-items:center;flex:none">${ic('mountain',28)}</span>
+    <div style="font-size:15px;line-height:1.4"><b style="font-size:17px">Piso ${PI.name}, ${fmtM(st.alt)}</b><br><span style="color:var(--muted)">${fmtHa(st.area)}, pendiente ${st.slope} %, ${st.real?'medido con SRTM':'medida aproximada'}</span></div></div>
+  <p class="eyebrow">${S.parcels.some(p=>p.id===q.id)?'Editar respuestas':'Nueva parcela, paso 2 de 2'}</p><h1 class="title">Cuéntanos de esta parcela</h1>
+  <div class="q"><label for="pname" class="ql">Nombre de la parcela</label><input id="pname" class="input" value="${q.name}" maxlength="24" placeholder="Ej. Ladera de abajo"></div>
+  <div class="q"><span class="ql">¿Qué tienes sembrado ahora?</span><span class="qh">Elige varios si siembras juntos, por ejemplo maíz con haba</span>${cropPicker('crop',CROP_LIST,q.crops,true)}</div>
+  ${!rest&&q.crops.length?`<div class="q"><span class="ql">¿En qué mes lo sembraste?</span><span class="qh">Con esto sabemos en qué etapa está hoy</span><div class="months">${months.map(i=>`<button data-act="sown" data-v="${i}" aria-pressed="${q.sownI===i}"><b>${MONTHS[mOf(i)]}</b><small>${yOf(i)}</small></button>`).join('')}</div></div>`:''}
+  <div class="q"><span class="ql">¿Qué cosechaste antes en esta parcela?</span><span class="qh">Lo último que sacaste antes de lo que tienes ahora. Puedes elegir varios</span>${cropPicker('prev',CROP_LIST,q.prev,true)}</div>
+  <div class="q"><span class="ql">¿Qué piensas sembrar después?</span><span class="qh">Opcional. Te diremos si es buena idea para esta parcela</span>${cropPicker('plan',PLAN_OPTS,q.plan,false)}
+    <button class="link-btn" data-act="plan" data-v="" style="margin-top:6px">${q.plan?'Quitar, todavía no sé':'Todavía no sé'}</button></div>
+  <div class="q"><span class="ql" style="margin-bottom:10px">¿Para qué es esta parcela?</span>${seg('purpose',[['casa','Mi casa','house'],['vender','Vender','cart'],['ambos','Las dos','both']],q.purpose)}</div>
+  <div class="q"><span class="ql" style="margin-bottom:10px">¿Tiene riego?</span>${seg('water',[['secano','Solo lluvia','rain'],['riego','Tiene riego','drop']],q.water)}</div>
+  <div class="q"><span class="ql" style="margin-bottom:10px">¿Tienes animales que coman de aquí?</span>${seg('animals',[['si','Sí','cow'],['no','No','']],q.animals)}</div>`,
+  cta:`${!ok?`<p class="small" style="text-align:center;margin:0">Falta: ${[!q.crops.length&&'qué tienes sembrado',!rest&&q.crops.length&&q.sownI==null&&'el mes de siembra',!q.prev.length&&'qué cosechaste antes'].filter(Boolean).join(', ')}</p>`:''}${primary('Guardar parcela','finishQuiz',!ok)}`};
+},
+
+parcel(){
+  const p=curP();if(!p)return V.parcels();
+  const idx=S.parcels.indexOf(p),n=S.parcels.length,pi=pisoOf(p.stats.alt),PI=PISOS[pi],cl=climFor(p.stats.alt),st=stageOf(p),A=alertsFor(p),np=nextPlan(p);
+  const head=`<button class="back" data-act="home">${icm('back',16)} Mis parcelas</button>
+    <div class="phead">${n>1?`<button class="nav" data-act="prevP" aria-label="Parcela anterior" ${idx===0?'disabled':''}>${icm('left',20)}</button>`:''}
+      <div class="t"><p class="eyebrow">Parcela ${idx+1} de ${n}, piso ${PI.name}, ${fmtM(p.stats.alt)}</p><h1 class="title" style="margin:4px 0 2px">${p.name}</h1></div>
+      ${n>1?`<button class="nav" data-act="nextP" aria-label="Parcela siguiente" ${idx===n-1?'disabled':''}>${icm('right',20)}</button>`:''}</div>
+    <div class="ptabs" role="tablist">${[['hoy','Hoy','home'],['avisos',`Alertas${A.length?` (${A.length})`:''}`,'bell'],['siembra','Siembra','sprout'],['datos','Datos','pin']].map(t=>`<button role="tab" data-act="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${icm(t[2],16)}${t[1]}</button>`).join('')}</div>`;
+
+  if(S.tab==='hoy'){
+    const top=A.find(a=>a.k!=='task');
+    return {html:head+`
+      ${top?alertCard(top,A.indexOf(top),false):`<div class="card" style="display:flex;gap:12px;align-items:center">${ic('sun',30)}<div><b>Sin alertas esta semana</b><br><span style="color:var(--muted)">Te avisaremos por SMS si algo cambia.</span></div></div>`}
+      <div class="card"><h3>Tu cultivo hoy</h3>
+        ${st?`<div class="ncrop" style="margin-bottom:14px">${art(st.key,56)}<div class="nm" style="font-size:18px">${st.key}<small>${st.name}${st.sensitive?', etapa sensible a la helada':''}</small></div></div>${stageBar(st)}
+          ${ASOC[st.key]?`<details><summary>Cómo sembrar ${st.key.toLowerCase()} juntos</summary><div class="body">${ASOC[st.key]} <i>Referencia general, valida con INIA.</i></div></details>`:''}`
+        :`<div class="ncrop">${art('Descanso',56)}<div class="nm" style="font-size:18px">En descanso<small>Puedes planear tu próxima siembra</small></div></div>`}
+      </div>
+      <div class="card"><h3>Lo que ven los satélites este mes</h3>
+        <div class="cmpbars"><div><span>Lluvia normal en ${MF[NM]}</span><i style="width:100%"></i><b>${cl.rain[NM]} mm</b></div><div><span>Lluvia de los ${ANOM.period}</span><i style="width:${100+ANOM.rainPct}%;background:#E8A317"></i><b>${Math.round(cl.rain[NM]*(1+ANOM.rainPct/100))} mm</b></div></div>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.5">Llovió <b>${-ANOM.rainPct} % menos</b> de lo normal y el suelo está ${ANOM.soil}.</p>
+        <span class="tag sat" style="margin-top:10px">${ic('sat',13)} GPM IMERG + SMAP${ANOM.live?', '+ANOM.period:', valores de ejemplo'}</span></div>
+      <button class="card nextcard" data-act="tab" data-v="siembra">${ic('sprout',28)}<div style="flex:1;text-align:left"><b>Tu próxima siembra</b><br><span>${np.mine?`Tu idea: ${np.mine.c.toLowerCase()}. `:''}${np.next?`${np.mine&&np.next.c!==np.mine.c?'Mejor opción: ':'Desde '}${np.mine&&np.next.c!==np.mine.c?np.next.c.toLowerCase()+', desde ':''}${fmtMY(np.next.sow)}`:''}</span></div>${np.mine?lvlHTML(np.mine.lvl):''}</button>`,cta:''};
+  }
+
+  if(S.tab==='avisos'){
+    return {html:head+`
+      ${A.length?A.map((a,i)=>alertCard(a,i,true)).join(''):'<p class="lead">Sin alertas esta semana.</p>'}
+      <p class="small" style="margin:-2px 0 14px">${fcFor(p)?'Pronóstico: Open-Meteo, actualizado hoy.':'Sin conexión al pronóstico: se muestran valores de ejemplo.'} ${ANOM.live?`Anomalía: GPM IMERG y SMAP (${ANOM.period}).`:'Anomalía de lluvia y suelo: valores de ejemplo hasta correr el script de Earth Engine.'}</p>
+      ${smsBlock(A[0]?A[0].sms:noAcc(`MUYUY: Sin alertas esta semana en ${p.name}.`))}`,cta:''};
+  }
+
+  if(S.tab==='siembra'){
+    const curCrop=st?st.key:null;
+    if(!p.plan&&!S.skipPlan) return {html:head+`
+      ${guide(`${curCrop?`Cuando coseches tu ${curCrop.toLowerCase()}`:'Para tu parcela en descanso'}, ¿qué piensas sembrar? Te diré si es buena idea y cuándo.`)}
+      <div class="card"><h3>¿Qué piensas sembrar después?</h3>${cropPicker('planNow',PLAN_OPTS,null,false)}
+      <button class="link-btn" data-act="skipPlan" style="margin-top:8px">Todavía no sé, recomiéndame</button></div>`,cta:''};
+    const m=np.mine,next=np.next,after=np.after,camps=[];
+    if(st)camps.push({lab:'Ahora',c:st.key,camp:campaign(nowI-st.el),d:`Sembrado ${fmtMYs(nowI-st.el)}, cosecha ${fmtMYs(st.harvestI)}`,tag:'now'});
+    if(next)camps.push({lab:m&&next.c===m.c?'Tu idea':'Recomendado',c:next.c,camp:campaign(next.sow),d:`Siembra ${fmtMYs(next.sow)}${next.end>next.sow?' a '+fmtMYs(next.end):''}, cosecha ${fmtMYs(next.harvest)}`,tag:'next'});
+    if(after)camps.push({lab:'Después',c:after.c,camp:campaign(after.sow),d:`Siembra ${fmtMYs(after.sow)}, cosecha ${fmtMYs(after.harvest)}`,tag:'after'});
+    const altList=np.alts.filter(a=>!m||a.c!==m.c);
+    return {html:head+`
+      ${m?`<div class="card evalc lvlb${m.lvl}">
+        <div class="ehead">${art(m.c,60)}<div style="flex:1"><span class="small" style="margin:0">Tu idea</span><div class="reco-name" style="margin:2px 0 6px">${m.c}</div>${lvlHTML(m.lvl)}</div></div>
+        <p class="when2">${m.canNow?`Puedes sembrar ya, hasta ${fmtMY(m.end)}.`:`Podrías sembrar desde <b>${fmtMY(m.sow)}</b>${m.end>m.sow?` hasta ${fmtMY(m.end)}`:''}${st?`, después de cosechar tu ${st.key.toLowerCase()}`:''}. Cosecharías en ${fmtMY(m.harvest)}.`}</p>
+        ${m.cons.length?`<ul class="reasons">${m.cons.map(x=>`<li class="con"><span class="ri">${ic(x.i,20)}</span><span>${x.t}</span></li>`).join('')}</ul>`:''}
+        ${m.pros.length?`<ul class="reasons">${m.pros.map(x=>`<li><span class="ri">${ic(x.i,20)}</span><span>${x.t}</span></li>`).join('')}</ul>`:''}
+        <button class="link-btn" data-act="changePlan">Cambiar mi idea</button></div>`
+      :`${guide('Te muestro lo que mejor encaja en esta parcela, según la fecha de hoy, el clima de este año y lo que sembraste antes.')}`}
+      ${altList.length?`<h2 class="sec">${m&&m.lvl===3?'Otras buenas opciones':m?'Mejores opciones para esta parcela':'Lo que mejor encaja'}</h2>
+        ${altList.map(a=>`<div class="altc">${art(a.c,52)}<div style="flex:1;min-width:0"><b>${a.c}</b><span>${a.canNow?'Puedes sembrar ya':'Desde '+fmtMYs(a.sow)}, ${(a.pros[0]||{t:WHY[a.c]||''}).t.toLowerCase()}</span>${lvlHTML(a.lvl)}</div><button class="btn btn-ghost" data-act="pickPlan" data-v="${a.c}" style="min-height:44px;padding:0 12px">Elegir</button></div>`).join('')}`:''}
+      <div class="card"><h3>Tus campañas</h3><div class="camps">${camps.map(r=>`<div class="camp ${r.tag}"><div class="cl">${r.lab}<small>Campaña ${r.camp}</small></div>${art(r.c,44)}<div class="cd"><b>${r.c}</b><span>${r.d}</span></div></div>`).join('')}</div>
+        ${next&&ASOC[next.c]?`<div class="tip">${ic('leaf',20)}<span><b>Cómo sembrarlos juntos:</b> ${ASOC[next.c]} <i>Valida con INIA.</i></span></div>`:''}
+        <p class="small">Tiempos de referencia general. Confirma la variedad con INIA o tu técnico.</p></div>
+      <div class="review"><b>Revisa con un técnico:</b> ${next?(next.info.frost===1?`fecha de siembra del ${next.c.toLowerCase()} para que no florezca con helada.`:`semilla de ${next.c.toLowerCase()} adaptada a ${fmtM(p.stats.alt)}.`):'qué sembrar en esta parcela.'}</div>
+      <button class="btn btn-ghost" style="width:100%" data-act="share">${ic('send',18)} Enviar este plan a mi técnico</button>`,cta:''};
+  }
+
+  // datos
+  const yTop=4300,yBot=3000,pos=Math.max(4,Math.min(96,(yTop-p.stats.alt)/(yTop-yBot)*100));
+  const minT=Math.min(...cl.tmin),fNights=cl.frost.reduce((a,b)=>a+b,0),rainY=cl.rain.reduce((a,b)=>a+b,0);
+  return {html:head+`
+    <div class="card"><div class="alt-card">
+      <div class="alt-bar"><div style="background:${PISOS.puna.col}">Puna</div><div style="background:${PISOS.suni.col}">Suni</div><div style="background:${PISOS.quechua.col}">Quechua</div><span class="me" style="top:${pos}%"></span></div>
+      <div><span class="tag" style="background:${PI.col}22;color:${shade(PI.col,.55)}">Piso ${PI.name}</span><div style="font-size:26px;font-weight:700;margin:8px 0 2px">${fmtM(p.stats.alt)}</div>
+        <p style="margin:0 0 10px;font-size:15px;line-height:1.45;color:#3A443C">${PI.desc}</p>
+        <div class="kv"><div><div class="k">Tamaño</div><div class="v">${fmtHa(p.stats.area)}</div></div><div><div class="k">Pendiente</div><div class="v">${p.stats.slope} %</div></div></div></div></div>
+      <span class="tag sat" style="margin-top:12px">${ic('sat',13)} ${p.stats.real?'Altura y pendiente: SRTM (NASA)':'Medida aproximada'}</span></div>
+    <div class="card"><h3>Lo que tienes sembrado</h3><div class="now-crops">${p.crops.map(c=>{const lv=(SUIT[pi][c]||2);return `<div class="ncrop">${art(c,46)}<div class="nm">${c==='Descanso'?'En descanso':c}<small>${CI[c]?'Tarda '+CI[c].range:''}</small></div>${c==='Descanso'?'':lvlHTML(lv)}</div>`;}).join('')}</div>
+      ${p.prev&&p.prev.length?`<p class="small" style="margin-top:12px">Antes cosechaste: ${p.prev.join(', ').toLowerCase()}.</p>`:''}</div>
+    <div class="card"><h3>El clima de tu parcela en el año</h3><p class="sub">Promedio de muchos años, ajustado a tu altura. El mes actual está marcado</p>
+      ${climateChart(cl)}
+      <div class="lg"><span><i style="background:#D9783B"></i>Temp. máxima</span><span><i style="background:#5144C9"></i>Temp. mínima</span><span><i style="background:#8DBEDC"></i>Lluvia</span><span style="color:#1662C4">% Humedad</span></div>
+      <div class="facts"><div class="fact"><div class="k">Noches de helada</div><div class="v">${fNights} al año</div></div><div class="fact"><div class="k">Más frío</div><div class="v">${minT.toFixed(1)} °C</div></div><div class="fact"><div class="k">Lluvia</div><div class="v">${rainY} mm</div></div></div>
+      <details><summary>¿De dónde salen estos datos?</summary><div class="body"><span class="tag sat">${ic('sat',13)} NASA POWER${CLIM.live?', en vivo':', valores de referencia'}</span><br>Temperatura, lluvia y humedad relativa son el promedio de muchos años de NASA POWER. Como su medición cubre una zona grande, ajustamos la temperatura a la altura exacta de tu parcela: cada 100 m más arriba, unos 0,65 °C más frío.</div></details></div>
+    <div class="btn-row" style="margin-bottom:6px"><button class="btn btn-ghost" data-act="editShape">${icm('edit',18)} Editar forma</button><button class="btn btn-ghost" data-act="editQuiz">${icm('list',18)} Editar respuestas</button></div>
+    <button class="link-btn" data-act="delP" style="color:#B42318">${S.confirmDel===p.id?'Toca otra vez para eliminar esta parcela':'Eliminar parcela'}</button>`,cta:''};
+}
+};
+function smsBlock(text){
+  const inbox=S.smsSent.slice(-3);
+  return `<h2 class="sec" id="smsSec">Alertas por SMS</h2>
+    <div class="phone" id="phone"><div class="scr"><div class="bar"><span>${String(NOW.getHours()).padStart(2,'0')}:${String(NOW.getMinutes()).padStart(2,'0')}</span><span>●●● ▮</span></div><div class="who"><span>${icm('sprout',18)}</span>MUYUY</div>
+      ${inbox.length?inbox.map((m,i)=>`<div class="sms ${i===inbox.length-1&&S.justSent?'new':''}">${m.t}<small>${m.to}</small></div>`).join(''):`<div class="sms" style="opacity:.6">${text}<small>Vista previa</small></div>`}</div></div>
+    <div class="card"><div class="toggle-row">Recibir alertas por SMS<label class="switch"><input type="checkbox" data-sw="sms" ${S.smsOn?'checked':''}><span></span></label></div>
+      <label class="ql" for="phoneIn" style="font-size:15px;margin:6px 0 8px">Mi número</label>
+      <div class="phone-in"><input class="input" value="+51" disabled aria-label="Código de país"><input id="phoneIn" class="input" inputmode="tel" placeholder="987 654 321" value="${S.phone}" maxlength="11"></div>
+      <p class="small">Funciona en cualquier celular, sin internet. Los mensajes van sin tildes para que lleguen bien.</p></div>
+    <div class="card"><h3>Contactos que también reciben alertas</h3><p class="sub">Tu familia, un vecino o el presidente de tu comunidad</p>
+      ${S.contacts.length?`<ul class="contacts">${S.contacts.map((c,i)=>`<li><span class="cav">${c.name[0].toUpperCase()}</span><div><b>${c.name}</b><span>+51 ${c.phone}, ${c.role}</span></div><button class="iconx" data-act="delContact" data-i="${i}" aria-label="Quitar a ${c.name}">${icm('trash',17)}</button></li>`).join('')}</ul>`:'<p class="small" style="margin:0 0 10px">Todavía no agregas contactos.</p>'}
+      <div class="addc"><input id="cName" class="input" placeholder="Nombre" maxlength="20" aria-label="Nombre del contacto"><input id="cPhone" class="input" inputmode="tel" placeholder="Celular" maxlength="11" aria-label="Celular del contacto">
+        <select id="cRole" class="input" aria-label="Relación"><option>Familia</option><option>Vecino</option><option>Comunidad</option></select></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:8px" data-act="addContact">${icm('plus',18)} Agregar contacto</button></div>`;
+}
+function flowBack(){return `<button class="back" data-act="cancelFlow">${icm('back',16)} Cancelar</button>`;}
+
+/* ===== Render ===== */
+function render(){
+  const v=V[S.screen]();
+  const inner=$('#panelInner');inner.innerHTML=v.html;
+  const c=$('#cta');c.innerHTML=v.cta||'';c.style.display=v.cta?'':'none';
+  const inFlow=['locate','draw','analyzing','quiz'].includes(S.screen)&&!S.editing&&!(S.quiz&&S.parcels.some(p=>p.id===S.quiz.id));
+  const step=S.screen==='quiz'||S.screen==='analyzing'?2:1;
+  $('#hdrMid').innerHTML=inFlow?`<div class="flowsteps">${['Ubicar','Preguntas'].map((l,i)=>`${i?'<span class="sep"></span>':''}<span class="s ${i+1===step?'on':i+1<step?'done':''}"><span class="n">${i+1<step?icm('check',12,3):i+1}</span><span class="lbl">${l}</span></span>`).join('')}</div>`:'';
+  $('#hdrRight').innerHTML=S.screen==='welcome'?'':`<div class="user-chip">${S.smsOn&&S.phone?`<span class="sms-dot">${ic('sms',14)} SMS</span>`:''}<span class="av">${(S.user||'?')[0].toUpperCase()}</span><span class="nm">${S.user||'Invitado'}</span></div>`;
+  S.parcels.forEach(loadForecast);
+  updateOverlays();
+  if(S.screen==='parcels')bindCarousel();
+}
+function go(scr,opts){stopSpeak();S.screen=scr;S.confirmDel=null;render();syncMap();if(!opts||!opts.keep)$('#panel').scrollTop=0;}
+function openParcel(id,tab){S.cur=id;S.tab=tab||S.tab||'hoy';S.justSent=false;S.skipPlan=false;go('parcel');}
+function carIdx(){const c=$('#carousel');if(!c)return 0;const cards=[...c.querySelectorAll('.pcard,.add-card')];const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;cards.forEach((el,i)=>{const d=Math.abs(el.offsetLeft+el.offsetWidth/2-mid);if(d<bd){bd=d;best=i;}});return best;}
+function carGo(i){const c=$('#carousel');if(!c)return;const cards=[...c.querySelectorAll('.pcard,.add-card')];i=Math.max(0,Math.min(cards.length-1,i));const el=cards[i];c.scrollTo({left:el.offsetLeft-(c.clientWidth-el.offsetWidth)/2,behavior:'smooth'});}
+function carNav(){const c=$('#carousel');if(!c)return;const n=c.querySelectorAll('.pcard,.add-card').length,i=carIdx();const p=document.querySelector('.cnav.prev'),x=document.querySelector('.cnav.next');if(p)p.disabled=i<=0;if(x)x.disabled=i>=n-1;}
+let carDrag=null;
+window.addEventListener('pointermove',e=>{if(!carDrag)return;const c=$('#carousel');if(!c){carDrag=null;return;}const dx=e.clientX-carDrag.x;if(Math.abs(dx)>5){carDrag.moved=true;c.classList.add('dragging');}if(carDrag.moved)c.scrollLeft=carDrag.l-dx;});
+window.addEventListener('pointerup',()=>{if(!carDrag)return;const c=$('#carousel'),moved=carDrag.moved;carDrag=null;if(!c)return;c.classList.remove('dragging');if(moved){c.dataset.justDragged='1';setTimeout(()=>{delete c.dataset.justDragged;},60);carGo(carIdx());}});
+function bindCarousel(){
+  const c=$('#carousel');if(!c)return;let t=null;carNav();
+  c.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;carDrag={x:e.clientX,l:c.scrollLeft,moved:false};});
+  c.addEventListener('scroll',()=>{carNav();clearTimeout(t);t=setTimeout(()=>{const best=carIdx();
+    document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i===best));
+    const p=S.parcels[best];if(p){S.cur=p.id;document.querySelectorAll('.pcard').forEach(el=>el.classList.toggle('cur',el.dataset.pid===p.id));fitPolys([p.poly],{maxZoom:16,pitch:60});}
+    else if(mapReady&&S.parcels.length)fitPolys(S.parcels.map(p=>p.poly),{maxZoom:15});},140);},{passive:true});
+}
+
+/* ===== Flow actions ===== */
+function newQuiz(poly,stats){return {id:uid(),name:'Parcela '+(S.parcels.length+1),crops:[],sownI:null,prev:[],plan:null,purpose:'casa',water:'secano',animals:'si',poly,stats};}
+async function finishDraw(){
+  const poly=S.draft.slice();if(poly.length<3)return;
+  if(S.editing){const p=S.parcels.find(x=>x.id===S.editing);p.poly=poly;S.screen='analyzing';render();clearHandles();
+    const [st]=await Promise.all([analyze(poly,p.stats.alt),wait(1400)]);p.stats=st;save();S.editing=null;S.draft=[];toast('Forma guardada. Volvimos a medir tu parcela.');openParcel(p.id,'datos');return;}
+  go('analyzing');clearHandles();animateSteps();
+  const [st]=await Promise.all([analyze(poly),wait(2400)]);
+  S.quiz=newQuiz(poly,st);S.draft=[];go('quiz');
+}
+function animateSteps(){let i=0;const t=setInterval(()=>{const li=document.querySelectorAll('#anSteps li');if(!li.length||i>=li.length){clearInterval(t);return;}li[i].classList.add('on');i++;},520);}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function finishQuiz(){
+  const q=S.quiz;if(q.crops.includes('Descanso'))q.sownI=null;
+  const ex=S.parcels.findIndex(p=>p.id===q.id);
+  if(ex>=0)S.parcels[ex]=q;else S.parcels.push(q);
+  S.quiz=null;save();toast(ex>=0?'Respuestas guardadas':'Parcela guardada');openParcel(q.id,'hoy');
+}
+async function demoRosa(){
+  if(!S.user)S.user='Rosa';
+  const A=quadAt(-74.2135,-13.2420,120,95,15),B=quadAt(-74.1905,-13.3035,140,110,-20),cs=campStart();
+  go('analyzing');animateSteps();
+  const [sa,sb]=await Promise.all([analyze(A,3340),analyze(B,3790),wait(2200)]);
+  const clampI=i=>Math.min(i,nowI);
+  S.parcels=[
+    {id:uid(),name:'Pampa de arriba',poly:B,stats:sb,crops:['Papa'],sownI:clampI(MI(cs,9)),prev:['Cebada'],plan:'Maíz',purpose:'vender',water:'secano',animals:'no'},
+    {id:uid(),name:'Ladera de abajo',poly:A,stats:sa,crops:['Maíz','Haba'],sownI:clampI(MI(cs,8)),prev:['Cebada'],plan:'Papa',purpose:'casa',water:'secano',animals:'si'}];
+  S.contacts=S.contacts.length?S.contacts:[{name:'Juan (hijo)',phone:'912345678',role:'Familia'},{name:'Presidente comunal',phone:'923456789',role:'Comunidad'}];
+  S.cur=S.parcels[0].id;save();go('parcels');
+}
+
+/* ===== Events ===== */
+$('#app').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,v=b.dataset.v;
+  switch(a){
+    case 'start':{const n=$('#uname');S.user=n?n.value.trim():S.user;save();go('parcels');break;}
+    case 'home':if(S.screen==='welcome')break;S.editing=null;S.draft=[];go('parcels');break;
+    case 'speak':speak(b);break;
+    case 'set':{const k=b.dataset.k;if(k==='lang'){if(v==='qu')toast('El runasimi llegará con audios grabados en Chiara. Por ahora, la app está en español.');break;}
+      if(S.quiz){S.quiz[k]=v;b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));}break;}
+    case 'demoRosa':demoRosa();break;
+    case 'add':S.draft=[];S.gpsAt=null;S.editing=null;S.selV=null;go('locate');break;
+    case 'cancelFlow':S.draft=[];S.editing=null;S.quiz=null;S.gpsAt=null;if(meMarker){meMarker.remove();meMarker=null;}go(S.cur&&curP()?'parcel':'parcels');break;
+    case 'gps':
+      if(!navigator.geolocation){toast('Tu equipo no tiene GPS. Busca tu parcela en el mapa.');go('draw');break;}
+      toast('Buscando tu ubicación…');
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const ll=[pos.coords.longitude,pos.coords.latitude],d=Math.hypot((ll[0]-TOWN.lng)*M_LNG(TOWN.lat),(ll[1]-TOWN.lat)*M_LAT);
+        if(d>40000){toast('Estás lejos de Chiara: te llevamos al centro del distrito.');S.gpsAt=[TOWN.lng,TOWN.lat];}else S.gpsAt=ll;
+        if(mapReady){if(meMarker)meMarker.remove();const el=document.createElement('div');el.className='me-dot';meMarker=new maplibregl.Marker({element:el}).setLngLat(S.gpsAt).addTo(map);
+          map.flyTo({center:S.gpsAt,zoom:17.3,pitch:45,bearing:0,speed:1.1,curve:1.6,essential:true});}
+        S.draft=[];go('draw');
+      },()=>{toast('No pudimos usar tu ubicación. Búscala en el mapa.');go('draw');},{enableHighAccuracy:true,timeout:9000});
+      break;
+    case 'draw':S.draft=[];go('draw');if(mapReady&&map.getZoom()<15.3)fly({center:map.getCenter(),zoom:15.8,pitch:40});if(!mapReady)toast('Sin mapa no se puede dibujar. Prueba el ejemplo de Doña Rosa.');break;
+    case 'undo':S.draft.pop();S.selV=null;drawDraft(true);render();break;
+    case 'clearDraw':S.draft=[];S.selV=null;drawDraft(true);render();break;
+    case 'delV':if(S.selV!=null&&S.draft.length>3){S.draft.splice(S.selV,1);S.selV=null;drawDraft(true);render();}break;
+    case 'finishDraw':finishDraw();break;
+    case 'crop':case 'prev':{const key=a==='crop'?'crops':'prev',C=S.quiz[key],i=C.indexOf(v);
+      if(v==='Descanso'){S.quiz[key]=i>=0?[]:['Descanso'];}else{if(i>=0)C.splice(i,1);else{C.push(v);const d=C.indexOf('Descanso');if(d>=0)C.splice(d,1);}}
+      keepScroll(render);break;}
+    case 'sown':S.quiz.sownI=+v;keepScroll(render);break;
+    case 'plan':S.quiz.plan=v||null;keepScroll(render);break;
+    case 'finishQuiz':{const n=$('#pname');if(n&&n.value.trim())S.quiz.name=n.value.trim();finishQuiz();break;}
+    case 'open':{const c=$('#carousel');if(c&&c.dataset.justDragged)break;openParcel(b.dataset.id,'hoy');break;}
+    case 'openAlert':openParcel(b.dataset.id,'avisos');break;
+    case 'cprev':carGo(carIdx()-1);break;
+    case 'cnext':carGo(carIdx()+1);break;
+    case 'cgo':carGo(+b.dataset.i);break;
+    case 'tab':S.tab=v;S.justSent=false;render();syncMap();$('#panel').scrollTop=0;break;
+    case 'prevP':case 'nextP':{const i=S.parcels.findIndex(p=>p.id===S.cur)+(a==='nextP'?1:-1);if(S.parcels[i])openParcel(S.parcels[i].id,S.tab);break;}
+    case 'planNow':case 'pickPlan':{const p=curP();p.plan=v;S.skipPlan=false;save();toast(`Revisamos tu idea: ${v.toLowerCase()}`);keepScroll(render);syncMap();break;}
+    case 'changePlan':{const p=curP();p.plan=null;S.skipPlan=false;save();render();break;}
+    case 'skipPlan':S.skipPlan=true;render();syncMap();break;
+    case 'editShape':{const p=curP();S.editing=p.id;S.draft=p.poly.map(x=>x.slice());S.selV=null;go('draw');break;}
+    case 'editQuiz':{const p=curP();S.quiz=JSON.parse(JSON.stringify(p));if(!S.quiz.prev)S.quiz.prev=[];go('quiz');break;}
+    case 'delP':{const p=curP();if(S.confirmDel!==p.id){S.confirmDel=p.id;keepScroll(render);break;}S.parcels=S.parcels.filter(x=>x.id!==p.id);S.cur=S.parcels[0]?S.parcels[0].id:null;save();toast('Parcela eliminada');go('parcels');break;}
+    case 'openSms':{const p=curP()||S.parcels[0];if(p){openParcel(p.id,'avisos');setTimeout(()=>{const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});},300);}break;}
+    case 'smsAlert':{const al=alertsFor(curP())[+b.dataset.i];sendSms(al.sms,'me');break;}
+    case 'commAlert':{const al=alertsFor(curP())[+b.dataset.i];sendSms(al.comm,'contacts');break;}
+    case 'addContact':{const n=$('#cName').value.trim(),ph=$('#cPhone').value.replace(/\D/g,''),r=$('#cRole').value;
+      if(!n){toast('Escribe el nombre del contacto.');$('#cName').focus();break;}
+      if(ph.length!==9){toast('El celular debe tener 9 dígitos.');$('#cPhone').focus();break;}
+      S.contacts.push({name:n,phone:ph,role:r});save();toast(`${n} recibirá las alertas`);keepScroll(render);break;}
+    case 'delContact':{const c=S.contacts.splice(+b.dataset.i,1)[0];save();toast(`${c.name} ya no recibirá alertas`);keepScroll(render);break;}
+    case 'share':{const p=curP(),np=nextPlan(p),st=stageOf(p);
+      const t=`Plan Muyuy, ${p.name} (${fmtHa(p.stats.area)}, ${fmtM(p.stats.alt)}, piso ${PISOS[pisoOf(p.stats.alt)].name}). Ahora: ${st?st.key+' ('+st.name.toLowerCase()+')':'descanso'}. Próxima siembra: ${np.next?np.next.c+' desde '+fmtMY(np.next.sow):'por definir'}.`;
+      if(navigator.share)navigator.share({title:'Mi plan Muyuy',text:t}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Plan copiado. Pégalo en WhatsApp para tu técnico.'),()=>toast('Plan listo para enviar.'));else toast('Plan listo para enviar.');break;}
+  }
+});
+$('#app').addEventListener('input',e=>{const t=e.target;
+  if(t.id==='pname'&&S.quiz)S.quiz.name=t.value.trim()||S.quiz.name;
+  if(t.id==='phoneIn'){S.phone=t.value.replace(/[^\d ]/g,'');save();}
+});
+$('#app').addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.sw==='sms'){S.smsOn=t.checked;save();toast(t.checked?'Alertas por SMS activadas':'Alertas por SMS apagadas');}
+  if(t.dataset.done){const [i,j]=t.dataset.done.split('-').map(Number),al=alertsFor(curP())[i];S.done[curP().id+'-'+al.k+'-'+j]=t.checked;save();if(t.checked)toast('¡Bien! Marcado como hecho');}
+});
+function keepScroll(fn){const p=$('#panel'),s=p.scrollTop;fn();p.scrollTop=s;}
+
+/* ===== SMS ===== */
+async function sendSms(text,who){
+  const me=S.phone.replace(/\D/g,'');
+  let targets=[];
+  if(who==='me'){if(me.length<9){toast('Escribe tu número de celular (9 dígitos) abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}targets=[{name:'Tú',phone:me}];}
+  else{targets=S.contacts.slice();if(me.length===9)targets.unshift({name:'Tú',phone:me});if(!S.contacts.length){toast('Agrega contactos de tu comunidad abajo.');const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth'});return;}}
+  S.smsSent.push({t:text,to:who==='me'?'Enviado a ti':`Enviado a ${targets.length} personas`});S.justSent=true;keepScroll(render);
+  const s=$('#smsSec');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});
+  const ph=$('#phone');if(ph){ph.classList.remove('buzz');void ph.offsetWidth;ph.classList.add('buzz');}
+  if(navigator.vibrate)navigator.vibrate([120,60,120]);
+  const nums=targets.map(t=>'+51'+t.phone);
+  if(SMS_ENDPOINT){
+    try{const rs=await Promise.all(nums.map(to=>fetch(SMS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,body:text})})));
+      toast(rs.every(r=>r.ok)?`SMS enviado a ${nums.length} ${nums.length===1?'número':'números'}`:'Algunos SMS no se enviaron. Revisa la configuración.');}catch(e){toast('No se pudo enviar el SMS. Revisa la conexión.');}
+  } else if(/Android|iPhone|iPad/i.test(navigator.userAgent)){
+    location.href=`sms:${nums.join(',')}${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(text)}`;
+  } else toast(who==='me'?'Así llegará a tu celular.':`Así llegará a ${targets.length} personas de tu comunidad.`);
+}
+
+/* ===== Voice ===== */
+let speaking=null;
+function speak(btn){if(!('speechSynthesis' in window)){toast('Tu navegador no puede leer en voz alta.');return;}
+  if(speaking===btn){stopSpeak();return;}stopSpeak();
+  const u=new SpeechSynthesisUtterance(btn.closest('.bubble').querySelector('.txt').textContent);u.lang='es-PE';u.rate=0.95;
+  const vs=speechSynthesis.getVoices(),es=vs.find(v=>/es[-_](PE|419|MX|US)/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang));if(es)u.voice=es;
+  u.onend=()=>{btn.classList.remove('on');speaking=null;};btn.classList.add('on');speaking=btn;speechSynthesis.speak(u);}
+function stopSpeak(){if('speechSynthesis' in window)speechSynthesis.cancel();if(speaking)speaking.classList.remove('on');speaking=null;}
+
+let toastT=null;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);}
+function rerenderIfClimate(){if(S.screen==='parcel'||S.screen==='parcels')keepScroll(render);}
+
+/* ===== Init ===== */
+$('#brandMark').innerHTML=icm('sprout',20);
+$('#fbIcon').innerHTML=icm('map',40,1.6);
+load();
+if(S.user||S.parcels.length){S.screen='parcels';if(S.parcels[0])S.cur=S.parcels[0].id;}
+render();initMap();loadPower();
+})();
+
+</script>
+</body>
+</html>

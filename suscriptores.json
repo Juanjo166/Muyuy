@@ -1,0 +1,16 @@
+[
+  {
+    "parcela": "Pampa de arriba",
+    "lat": -13.3035,
+    "lng": -74.1905,
+    "alt": 3790,
+    "telefonos": ["+51900000000"]
+  },
+  {
+    "parcela": "Ladera de abajo",
+    "lat": -13.2420,
+    "lng": -74.2135,
+    "alt": 3340,
+    "telefonos": ["+51900000000"]
+  }
+]
