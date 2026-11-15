@@ -348,7 +348,14 @@
     'Una por una, dando la vuelta.': 'One at a time, all the way around.',
     'Cuando termines, toca aquí.': 'When you finish, tap here.',
     'Si un punto quedó mal, arrástralo.': 'If a point is off, drag it.',
-    'Saltar': 'Skip', 'Entendido': 'Got it', '¿Cómo dibujo?': 'How do I draw?'
+    'Saltar': 'Skip', 'Entendido': 'Got it', '¿Cómo dibujo?': 'How do I draw?',
+    // Menú de perfil
+    'Mi perfil': 'My profile', 'Datos guardados solo en este celular': 'Data saved only on this phone',
+    'Cambiar nombre': 'Change name', 'Tu nombre': 'Your name', 'Guardar': 'Save', 'Salir': 'Log out',
+    'Toca otra vez para salir': 'Tap again to log out',
+    'Se borrarán tus parcelas, tu número y tus contactos de este celular.': 'Your fields, phone number and contacts will be deleted from this phone.',
+    'Saliste. Tus datos se borraron de este celular.': 'You logged out. Your data was deleted from this phone.',
+    'Escribe un nombre.': 'Enter a name.', 'Nombre actualizado': 'Name updated'
   };
   for (const k of Object.keys(NAMES)) EX[k] = NAMES[k];
   const EXL = {};

@@ -312,6 +312,25 @@ html[lang="en"] .listen.on::after{content:"Stop"}
 .lang-sw button[aria-pressed="true"]{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(24,35,46,.14)}
 .lang-sw button:hover{color:var(--ink)}
 .lang-sw button.soon{opacity:.6}
+/* Menú de perfil (avatar arriba a la derecha) */
+#hdrRight{position:relative}
+button.user-chip{font:inherit;color:inherit;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+button.user-chip:hover,button.user-chip[aria-expanded="true"]{border-color:var(--green)}
+.user-chip .chev{color:var(--muted);margin-left:-2px;display:grid}.user-chip .chev svg{transform:rotate(90deg);transition:transform .2s}.user-chip[aria-expanded="true"] .chev svg{transform:rotate(-90deg)}
+.pmenu{position:absolute;right:0;top:calc(100% + 8px);width:min(290px,calc(100vw - 24px));background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(24,35,46,.18);padding:8px;z-index:20;animation:fadeUp .18s ease}
+.pmenu .pm-h{display:flex;gap:10px;align-items:center;padding:8px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.pmenu .pm-h .av{width:38px;height:38px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-weight:700;flex:none}
+.pmenu .pm-h b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmenu .pm-h span{font-size:12px;color:var(--muted)}
+.pmenu .pm-i{width:100%;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left}
+.pmenu .pm-i:hover{background:#F4F6F5}
+.pmenu .pm-i.out{color:#B42318}
+.pmenu .pm-i.out.confirm{background:#FEE4E2}
+.pmenu .pm-note{margin:4px 10px 6px;font-size:13px;line-height:1.4;color:#7A2E1A}
+.pmenu .pm-ren{display:flex;gap:6px;padding:4px 4px 6px}
+.pmenu .pm-ren .input{min-height:42px;font-size:15px}
+.pmenu .pm-ren .btn{min-height:42px;padding:0 14px}
+@media (max-width:899px){.pmenu{position:fixed;left:12px;right:12px;top:62px;width:auto}}
 @media (max-width:899px){.lang-sw button{min-width:34px;height:30px;font-size:12px;padding:0 6px}}
 .ptabs{top:0!important;background:var(--cream);border-radius:0;padding:0;gap:0;border-bottom:1px solid var(--line);margin:8px -22px 16px;padding:0 10px}
 .ptabs button{border-radius:0;border-bottom:3px solid transparent;min-height:50px;font-size:15px}
@@ -1699,13 +1718,35 @@ function render(){
   const inFlow=['locate','draw','analyzing','quiz'].includes(S.screen)&&!S.editing&&!(S.quiz&&S.parcels.some(p=>p.id===S.quiz.id));
   const step=S.screen==='quiz'||S.screen==='analyzing'?2:1;
   $('#hdrMid').innerHTML=inFlow?`<div class="flowsteps">${['Ubicar','Preguntas'].map((l,i)=>`${i?'<span class="sep"></span>':''}<span class="s ${i+1===step?'on':i+1<step?'done':''}"><span class="n">${i+1<step?icm('check',12,3):i+1}</span><span class="lbl">${l}</span></span>`).join('')}</div>`:'';
-  $('#hdrRight').innerHTML=S.screen==='welcome'?'':`<div class="user-chip">${S.smsOn&&S.phone?`<span class="sms-dot">${ic('sms',14)} WhatsApp</span>`:''}<span class="av">${(S.user||'?')[0].toUpperCase()}</span><span class="nm">${S.user||'Invitado'}</span></div>`;
+  renderHdrUser();
   S.parcels.forEach(p=>{loadForecast(p);loadSoil(p);loadNdvi(p);});
   updateOverlays();
   if(S.screen==='parcels')bindCarousel();
   if(S.screen==='draw'&&!S.editing&&!COACH.step&&!COACH.shown&&!coachSeen())coachStart();
   coachDraw();
 }
+/* Perfil: no hay cuentas; el nombre y las parcelas viven solo en este celular. Salir = borrar esos datos. */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+function renderHdrUser(){
+  const h=$('#hdrRight');if(S.screen==='welcome'){S.menu=false;h.innerHTML='';return;}
+  const nm=S.user||'Invitado',ini=esc((S.user||'?')[0].toUpperCase());
+  h.innerHTML=`<button class="user-chip" data-act="profile" aria-haspopup="true" aria-expanded="${!!S.menu}" aria-label="Mi perfil">${S.smsOn&&S.phone?`<span class="sms-dot">${ic('sms',14)} WhatsApp</span>`:''}<span class="av">${ini}</span><span class="nm">${esc(nm)}</span><span class="chev">${icm('right',14)}</span></button>`+
+  (S.menu?`<div class="pmenu" role="menu"><div class="pm-h"><span class="av">${ini}</span><div style="min-width:0"><b>${esc(nm)}</b><span>Datos guardados solo en este celular</span></div></div>
+    ${S.renaming?`<div class="pm-ren"><input id="renameIn" class="input" value="${esc(S.user)}" maxlength="24" aria-label="Tu nombre" placeholder="Ej. Rosa"><button class="btn btn-dark" data-act="renameSave">Guardar</button></div>`
+      :`<button class="pm-i" role="menuitem" data-act="rename">${icm('edit',18)}Cambiar nombre</button>`}
+    <button class="pm-i out ${S.confirmOut?'confirm':''}" role="menuitem" data-act="logout">${icm('back',18)}${S.confirmOut?'Toca otra vez para salir':'Salir'}</button>
+    ${S.confirmOut?'<p class="pm-note">Se borrarán tus parcelas, tu número y tus contactos de este celular.</p>':''}</div>`:'');
+  if(S.renaming){const i=$('#renameIn');if(i){i.focus();i.select();}}
+}
+function closeMenu(){if(!S.menu)return;S.menu=false;S.renaming=false;S.confirmOut=false;renderHdrUser();}
+function logout(){
+  try{localStorage.removeItem(KEY);}catch(e){}
+  Object.assign(S,{user:'',parcels:[],cur:null,tab:'hoy',contacts:[],done:{},phone:'',smsOn:true,smsSent:[],draft:[],selV:null,editing:null,quiz:null,gpsAt:null,menu:false,renaming:false,confirmOut:false});
+  if(meMarker){meMarker.remove();meMarker=null;}
+  go('welcome');toast('Saliste. Tus datos se borraron de este celular.');
+}
+document.addEventListener('click',e=>{if(S.menu&&e.target.isConnected&&!e.target.closest('#hdrRight'))closeMenu();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();if(e.key==='Enter'&&e.target.id==='renameIn'){e.preventDefault();const b=document.querySelector('[data-act="renameSave"]');if(b)b.click();}});
 function go(scr,opts){stopSpeak();S.screen=scr;S.confirmDel=null;render();syncMap();if(!opts||!opts.keep)$('#panel').scrollTop=0;}
 function openParcel(id,tab){S.cur=id;S.tab=tab||S.tab||'hoy';S.justSent=false;S.skipPlan=false;go('parcel');}
 function carIdx(){const c=$('#carousel');if(!c)return 0;const cards=[...c.querySelectorAll('.pcard,.add-card')];const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;cards.forEach((el,i)=>{const d=Math.abs(el.offsetLeft+el.offsetWidth/2-mid);if(d<bd){bd=d;best=i;}});return best;}
@@ -1760,6 +1801,10 @@ $('#app').addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,v=b.dataset.v;
   switch(a){
     case 'start':{const n=$('#uname');S.user=n?n.value.trim():S.user;save();go('parcels');break;}
+    case 'profile':S.menu=!S.menu;S.renaming=false;S.confirmOut=false;renderHdrUser();break;
+    case 'rename':S.renaming=true;S.confirmOut=false;renderHdrUser();break;
+    case 'renameSave':{const n=($('#renameIn')||{}).value;if(!n||!n.trim()){toast('Escribe un nombre.');break;}S.user=n.trim().slice(0,24);save();S.renaming=false;S.menu=false;keepScroll(render);toast('Nombre actualizado');break;}
+    case 'logout':if(!S.confirmOut){S.confirmOut=true;S.renaming=false;renderHdrUser();break;}logout();break;
     case 'home':if(S.screen==='welcome')break;S.editing=null;S.draft=[];go('parcels');break;
     case 'speak':speak(b);break;
     case 'set':{const k=b.dataset.k;if(k==='lang'){if(v==='qu')toast('El runasimi llegará con audios grabados en Chiara. Por ahora, la app está en español.');break;}
