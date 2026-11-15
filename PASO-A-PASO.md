@@ -121,7 +121,7 @@ Marca cada casilla al terminar. Tiempo total: **1 h 45 min** aprox. con 3 person
   - Enlace al repositorio (GitHub).
   - Enlace al demo (video o diapositivas).
 - [ ] **J3. Recursos usados:**
-  - **NASA:** SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP.
+  - **NASA:** SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP, MODIS NDVI. Suelo: SoilGrids (ISRIC).
   - **Otros:** Open-Meteo (pronóstico), FAO GAEZ (aptitud por piso), INIA (tiempos de cultivo, por validar).
   - **Herramientas:** Google Earth Engine, MapLibre GL JS, AWS Terrain Tiles, Esri World Imagery, Twilio, Netlify.
 - [ ] **J4.** Si el formulario lo pide, declaren el **uso de IA** (prototipado de interfaz y código).
@@ -134,7 +134,7 @@ Marca cada casilla al terminar. Tiempo total: **1 h 45 min** aprox. con 3 person
 
 - [ ] **K1.** Ensayen el demo completo una vez, con el celular en la mano para el SMS.
 - [ ] **K2.** Preparen la respuesta a: *"¿Qué pasa si esta semana no hay helada?"* → abren `?demo` y explican que la alerta aparece sola cuando el pronóstico la trae.
-- [ ] **K3.** Preparen la respuesta a: *"¿Qué datos son de la NASA y cuáles no?"* → NASA: altura (SRTM), clima (POWER), lluvia (IMERG), suelo (SMAP). Pronóstico: Open-Meteo (en producción, SENAMHI).
+- [ ] **K3.** Preparen la respuesta a: *"¿Qué datos son de la NASA y cuáles no?"* → NASA: altura (SRTM), clima (POWER), lluvia (IMERG), suelo (SMAP), verdor (MODIS NDVI). Suelo: SoilGrids. Pronóstico: Open-Meteo (en producción, SENAMHI).
 
 ---
 

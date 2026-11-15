@@ -2,7 +2,9 @@
 
 > **Empieza por `PASO-A-PASO.md`:** es la lista de pendientes con casillas, en orden, con el reparto de tareas y la solución a los problemas comunes.
 
-Alertas de helada, lluvia y sequía para las parcelas de Chiara (Ayacucho), con datos de la NASA.
+Herramienta para decidir **qué rotación de cultivos** conviene en cada parcela de Chiara (Ayacucho) en los próximos 3 años, cuidando el suelo y el agua, con datos de satélites de la NASA. También avisa antes de una helada o lluvia fuerte.
+
+Reto de NASA Space Apps 2026: *Field Shift: Adapting Farms with NASA Data*. El material para la entrega está en `PITCH.md`.
 
 ## Qué hay en esta carpeta
 
@@ -20,7 +22,11 @@ Alertas de helada, lluvia y sequía para las parcelas de Chiara (Ayacucho), con 
 ## Qué ya funciona sin hacer nada
 - Mapa 3D real de Chiara (relieve SRTM e imagen satelital).
 - Medición de cada parcela: área, altura, piso y pendiente (SRTM).
-- Clima del lugar (NASA POWER, en vivo).
+- Clima del lugar (NASA POWER, en vivo), con corrección de sesgo frente a la referencia local.
+- **Comparación de 3 rotaciones de 3 años** por parcela (pestaña *Rotación*): la actual, una para cuidar el suelo y otra para ahorrar agua y vender. Cada una con línea de tiempo de 36 meses, puntos por criterio, prioridades del agricultor, evidencia, vacíos de información y riesgos.
+- Verdor de la vegetación (MODIS NDVI, en vivo; la API tarda ~30 s).
+- Suelo: materia orgánica, textura y pH (SoilGrids, en vivo; si no responde, valores típicos de la zona).
+- Pantalla *Cómo funciona*: datos usados, escalas, cómo decide el modelo, glosario y límites.
 - Pronóstico de 7 días por parcela, ajustado a su altura (Open-Meteo, en vivo).
 
 Basta con abrir `index.html` en Chrome con internet.
@@ -75,11 +81,13 @@ Después: **Deploys → Trigger deploy**.
 - **Si el pronóstico real no trae helada esa semana:** abre la app con `?demo` al final del enlace (`https://algo.netlify.app/?demo`) para ver las alertas con valores de ejemplo. Díganlo así en el pitch: "esta semana no hay helada; así se ve cuando la hay".
 
 ## Fuentes de datos
-NASA: SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP. Otras: Open-Meteo (pronóstico), FAO GAEZ (aptitud por piso), INIA (tiempos de cultivo, por validar). Herramientas: Google Earth Engine, MapLibre GL JS, AWS Terrain Tiles, Esri World Imagery, Twilio, Netlify.
+NASA: SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP, MODIS (MOD13Q1 NDVI, vía ORNL DAAC). Otras: SoilGrids (ISRIC), Open-Meteo (pronóstico), FAO GAEZ (aptitud por piso), FAO/USLE (factor C de cobertura, referencia), INIA (tiempos de cultivo, por validar). Herramientas: Google Earth Engine, MapLibre GL JS, AWS Terrain Tiles, Esri World Imagery, Twilio, Netlify.
 
 ## Lo que falta para un producto en operación
 - Conectar el pronóstico oficial del SENAMHI.
 - Recalcular la anomalía cada día de forma automática (cuenta de servicio de Earth Engine).
 - Cuentas de usuario y base de datos, para que cada agricultor se suscriba desde la app y el técnico vea las parcelas de su comunidad.
-- Validar con INIA los tiempos y las ventanas de siembra de cada cultivo.
+- Validar con INIA los tiempos y las ventanas de siembra de cada cultivo, y con agrónomos los valores de cobertura, agua y materia orgánica de cada cultivo (`TR` en `index.html`).
+- Validar la referencia local de temperatura con la estación del SENAMHI más cercana.
+- Agregar precios de mercado para el criterio "para vender".
 - Audio en quechua.
