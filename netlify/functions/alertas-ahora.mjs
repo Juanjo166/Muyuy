@@ -1,4 +1,4 @@
-// Muyuy: corre la revisión de alertas en este momento (para el demo frente al jurado).
+// Yachiraq: corre la revisión de alertas en este momento (para el demo frente al jurado).
 // Abre: https://TU-SITIO.netlify.app/.netlify/functions/alertas-ahora?clave=TU_CLAVE
 // Variable de entorno en Netlify: DEMO_KEY (inventa una clave, ej. chiara2026)
 import revisar from './alertas-diarias.mjs';

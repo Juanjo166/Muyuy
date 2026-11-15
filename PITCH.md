@@ -1,4 +1,4 @@
-# Muyuy: material para la entrega de NASA Space Apps 2026
+# Yachiraq: material para la entrega de NASA Space Apps 2026
 
 Reto: **Field Shift: Adapting Farms with NASA Data**. Este archivo tiene el texto para la página del proyecto, el guion del video, las diapositivas y las respuestas para el jurado. Primero en español y después en inglés (la nominación global se evalúa en inglés).
 
@@ -9,10 +9,10 @@ Reto: **Field Shift: Adapting Farms with NASA Data**. Este archivo tiene el text
 ## Español
 
 ### Resumen (página del proyecto, ~150 palabras)
-Muyuy ayuda a familias campesinas de Chiara (Ayacucho, Perú, 3,300 a 4,000 m) a decidir qué rotación de cultivos sembrar en los próximos 3 años, parcela por parcela. El agricultor dibuja su parcela en un mapa 3D y responde 5 preguntas. Muyuy mide la altura y la pendiente con SRTM, el clima con NASA POWER, la lluvia y la humedad del suelo recientes con GPM IMERG y SMAP, el verdor de la vegetación con MODIS NDVI y el suelo con SoilGrids. Con eso compara 3 rotaciones: la que ya hace, una para cuidar el suelo y otra para ahorrar agua y vender. Simula 36 meses mes por mes y muestra cuándo queda el suelo descubierto en época de lluvia. Para cada rotación explica por qué se sugiere, en qué datos se basa, qué beneficios y riesgos tiene, qué no sabemos y qué debe revisar un técnico. El agricultor elige sus prioridades y la recomendación cambia. También avisa por WhatsApp antes de una helada.
+Yachiraq ayuda a familias campesinas de Chiara (Ayacucho, Perú, 3,300 a 4,000 m) a decidir qué rotación de cultivos sembrar en los próximos 3 años, parcela por parcela. El agricultor dibuja su parcela en un mapa 3D y responde 5 preguntas. Yachiraq mide la altura y la pendiente con SRTM, el clima con NASA POWER, la lluvia y la humedad del suelo recientes con GPM IMERG y SMAP, el verdor de la vegetación con MODIS NDVI y el suelo con SoilGrids. Con eso compara 3 rotaciones: la que ya hace, una para cuidar el suelo y otra para ahorrar agua y vender. Simula 36 meses mes por mes y muestra cuándo queda el suelo descubierto en época de lluvia. Para cada rotación explica por qué se sugiere, en qué datos se basa, qué beneficios y riesgos tiene, qué no sabemos y qué debe revisar un técnico. El agricultor elige sus prioridades y la recomendación cambia. También avisa por WhatsApp antes de una helada.
 
 ### Cómo responde al reto
-| El reto pide | Muyuy |
+| El reto pide | Yachiraq |
 |---|---|
 | Usar datos de observación de la Tierra de la NASA | SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP y MODIS NDVI |
 | Combinarlos con suelo, cultivos y prioridades | SoilGrids, datos de 12 cultivos andinos y 5 prioridades del agricultor |
@@ -35,13 +35,13 @@ Usamos Claude (Anthropic) como asistente de programación y redacción. El model
 
 ### Guion del video (30 segundos)
 1. **(0–5 s)** Doña Rosa en su parcela, a 3,800 m. *"Cada año siembro papa y cebada. Pero llueve distinto y la tierra se cansa."*
-2. **(5–12 s)** Pantalla: dibuja su parcela en el mapa 3D. *"Muyuy mide mi parcela con satélites de la NASA: altura, pendiente, clima, lluvia, humedad y verdor."*
+2. **(5–12 s)** Pantalla: dibuja su parcela en el mapa 3D. *"Yachiraq mide mi parcela con satélites de la NASA: altura, pendiente, clima, lluvia, humedad y verdor."*
 3. **(12–22 s)** Pantalla: la comparación de 3 rotaciones, toca "Cuidar el suelo" y cambia la mejor opción. *"Me compara 3 rotaciones para los próximos 3 años y me dice cuál cuida mejor mi suelo y mi agua, y por qué."*
 4. **(22–27 s)** Pantalla: alerta de helada por WhatsApp. *"Y me avisa antes de la helada."*
-5. **(27–30 s)** Logo. *"Muyuy: datos de la NASA para decidir con tu experiencia."*
+5. **(27–30 s)** Logo. *"Yachiraq: datos de la NASA para decidir con tu experiencia."*
 
 ### Diapositivas (7)
-1. **Muyuy.** Rotaciones que cuidan tu suelo y tu agua. Chiara, Ayacucho.
+1. **Yachiraq.** Rotaciones que cuidan tu suelo y tu agua. Chiara, Ayacucho.
 2. **El problema.** Repetir cultivos cansa el suelo y trae plagas. Lluvias menos predecibles, heladas y laderas que se erosionan. Pocas estaciones en la sierra.
 3. **La solución.** Dibujas tu parcela, respondes 5 preguntas y comparas 3 rotaciones de 3 años con datos de satélite.
 4. **Los datos de la NASA.** SRTM, POWER, GPM, SMAP y MODIS, todo llevado a un valor por parcela y por mes. Ejemplo de la corrección de sesgo de POWER.
@@ -54,7 +54,7 @@ Usamos Claude (Anthropic) como asistente de programación y redacción. El model
 2. "Ver el ejemplo de Doña Rosa" → abrir "Pampa de arriba".
 3. Pestaña **Hoy**: lluvia y humedad del suelo frente a lo normal (GPM y SMAP) y verdor (MODIS).
 4. Pestaña **Rotación**: tabla comparativa → tocar "Ahorrar agua" y ver cómo cambia la mejor opción → abrir "Por qué, en qué datos se basa y qué revisar".
-5. Pestaña **Datos**: suelo y clima con corrección de sesgo → "Cómo funciona Muyuy".
+5. Pestaña **Datos**: suelo y clima con corrección de sesgo → "Cómo funciona Yachiraq".
 6. Pestaña **Alertas**: enviar la alerta por WhatsApp al celular del equipo.
 
 ### Preguntas probables del jurado
@@ -68,7 +68,7 @@ Usamos Claude (Anthropic) como asistente de programación y redacción. El model
 ## English
 
 ### Summary (~150 words)
-Muyuy helps smallholder families in Chiara (Ayacucho, Peru, 3,300–4,000 m) decide which crop rotation to plant over the next 3 years, field by field. The farmer draws the field on a 3D map and answers 5 questions. Muyuy measures elevation and slope with SRTM, long-term climate with NASA POWER, recent rainfall and soil moisture with GPM IMERG and SMAP, vegetation greenness with MODIS NDVI, and soil with SoilGrids. It then compares 3 rotations: the current one, a soil-building one and a water-saving, market-oriented one. It simulates 36 months and shows when the soil is left bare during heavy-rain months. For each rotation it explains why it was suggested, what evidence supports it, its benefits and risks, the information gaps, and what a local expert should review. Farmers pick their priorities and the ranking updates. It also sends WhatsApp frost alerts.
+Yachiraq helps smallholder families in Chiara (Ayacucho, Peru, 3,300–4,000 m) decide which crop rotation to plant over the next 3 years, field by field. The farmer draws the field on a 3D map and answers 5 questions. Yachiraq measures elevation and slope with SRTM, long-term climate with NASA POWER, recent rainfall and soil moisture with GPM IMERG and SMAP, vegetation greenness with MODIS NDVI, and soil with SoilGrids. It then compares 3 rotations: the current one, a soil-building one and a water-saving, market-oriented one. It simulates 36 months and shows when the soil is left bare during heavy-rain months. For each rotation it explains why it was suggested, what evidence supports it, its benefits and risks, the information gaps, and what a local expert should review. Farmers pick their priorities and the ranking updates. It also sends WhatsApp frost alerts.
 
 ### How it addresses the challenge
 - **NASA Earth observations:** SRTM/NASADEM, NASA POWER, GPM IMERG, SMAP, MODIS NDVI.
@@ -86,7 +86,7 @@ We used Claude (Anthropic) as a coding and writing assistant. The decision model
 
 ### 30-second video script
 1. **(0–5 s)** Doña Rosa in her field at 3,800 m: *"Every year I plant potato and barley. But the rain has changed and the soil is tired."*
-2. **(5–12 s)** She draws her field on the 3D map: *"Muyuy measures my field with NASA satellites: elevation, slope, climate, rain, soil moisture and greenness."*
+2. **(5–12 s)** She draws her field on the 3D map: *"Yachiraq measures my field with NASA satellites: elevation, slope, climate, rain, soil moisture and greenness."*
 3. **(12–22 s)** The comparison of 3 rotations; she taps "Protect the soil" and the best option changes: *"It compares 3 rotations for the next 3 years and tells me which one protects my soil and water, and why."*
 4. **(22–27 s)** WhatsApp frost alert: *"And it warns me before the frost."*
-5. **(27–30 s)** Logo: *"Muyuy: NASA data to decide with your own experience."*
+5. **(27–30 s)** Logo: *"Yachiraq: NASA data to decide with your own experience."*

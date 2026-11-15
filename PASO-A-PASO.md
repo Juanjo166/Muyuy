@@ -1,4 +1,4 @@
-# Muyuy: lista de pendientes para dejarlo funcional
+# Yachiraq: lista de pendientes para dejarlo funcional
 
 Marca cada casilla al terminar. Tiempo total: **1 h 45 min** aprox. con 3 personas en paralelo.
 
@@ -48,7 +48,7 @@ Marca cada casilla al terminar. Tiempo total: **1 h 45 min** aprox. con 3 person
 - [ ] **D1.** En GitHub: **New repository** → nombre `muyuy` → **Public** → **Create repository**.
 - [ ] **D2.** Toca **"uploading an existing file"**.
 - [ ] **D3.** Arrastra **todo el contenido** de la carpeta `muyuy` (incluida la carpeta `netlify` completa, no solo los archivos sueltos).
-- [ ] **D4.** Escribe un mensaje (ej. "Muyuy hackathon") y toca **Commit changes**.
+- [ ] **D4.** Escribe un mensaje (ej. "Yachiraq hackathon") y toca **Commit changes**.
 - [ ] **D5. Verifica:** en el repositorio se ven `index.html`, `netlify.toml`, `suscriptores.json` y la carpeta `netlify/functions` con 3 archivos `.mjs`.
 
 ---
@@ -59,7 +59,7 @@ Marca cada casilla al terminar. Tiempo total: **1 h 45 min** aprox. con 3 person
 - [ ] **E2.** Autoriza a Netlify y elige el repositorio `muyuy`.
 - [ ] **E3.** No cambies nada (el archivo `netlify.toml` ya configura todo). Toca **Deploy**.
 - [ ] **E4.** Cuando diga **Published**, copia el enlace (`https://algo.netlify.app`).
-- [ ] **E5.** *(Opcional)* Ponle un nombre fácil: **Site configuration → Change site name** → `muyuy-chiara`.
+- [ ] **E5.** *(Opcional)* Ponle un nombre fácil: **Site configuration → Change site name** → `yachiraq-chiara`.
 - [ ] **E6. Verifica:** en **Functions** aparecen `sms`, `alertas-diarias` (con horario programado) y `alertas-ahora`.
 
 ---
